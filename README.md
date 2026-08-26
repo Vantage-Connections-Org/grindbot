@@ -34,12 +34,27 @@ Everything is under the 🤖 icon:
 
 | Item | What it does |
 |---|---|
+| Settings… (⌘,) | Open the settings window — every option below, with live preview |
 | Say something now | Fire a message immediately — useful for hitting a cue while recording |
 | Turn off / Turn on | Stop the popups without quitting. Icon becomes 💤. Turning it back on fires one right away |
 | Face | Switch robot face for this session |
 | Reload config & messages | Re-read both files without rebuilding |
 | Edit messages… / Edit config.json… | Open the files in your default editor |
 | Quit | Shut it down |
+
+## Settings window
+
+**Settings…** in the menu opens a window with every option in one place:
+timing, size, screen corner and display, robot colors, face, and message file.
+
+Changes apply immediately — the robot resizes, moves, or recolors as you drag
+a slider — and save themselves to `config.json`. There's no OK or Cancel; what
+you see is what's running. **Show a message now** fires one so you can check
+the result without waiting for the timer.
+
+Editing `config.json` by hand still works and is the better path for version
+control or sharing a setup with someone else. Hit **Reload config & messages**
+after an external edit.
 
 ## Messages
 
@@ -90,6 +105,8 @@ a broken file degrades rather than crashes.
 | `screenIndex` | `0` | Which display: `0` is primary, `1` the next, `-1` follows keyboard focus |
 | `face` | `"visor"` | `visor`, `cyclops`, `pixel`, `angry`, `dot` |
 | `accent` | `"#33D6A8"` | Eyes, antenna, chest light |
+| `shell` | `"#FCFCFC"` | Robot body plastic. Ears, arms and neck are derived shades of it |
+| `visor` | `"#212121"` | The dark face panel behind the eyes |
 | `typeSpeed` | `0.022` | Seconds per character for the typewriter effect. `0` shows the whole message at once |
 | `shuffle` | `false` | Random order instead of in-order |
 | `messagesFile` | `"messages.txt"` | Path to the message file, relative to the app |
@@ -113,8 +130,12 @@ still get read time after they finish typing.
 `visor` (two glowing eyes), `cyclops` (one big lens), `pixel` (8-bit),
 `angry` (angled brows), `dot` (eyes and a smile).
 
-Switch live from the **Face** menu, or set `face` in `config.json` to make it
-stick across launches.
+Pick one in the settings window, from the **Face** menu, or set `face` in
+`config.json`.
+
+Colors are independent of the face: `accent` drives the eyes, antenna and
+chest light, `shell` the body, `visor` the panel behind the eyes. A dark
+`shell` with a bright `accent` gives a very different robot from the default.
 
 ## Customizing
 

@@ -50,7 +50,9 @@ struct Config {
     var position: Corner = .bottomRight
     var screenIndex: Int = 0                // -1 follows keyboard focus
     var face: Face = .visor
-    var accent: String = "#33D6A8"
+    var accent: String = "#33D6A8"        // eyes, antenna, chest light
+    var shell: String = "#FCFCFC"         // robot plastic
+    var visor: String = "#212121"         // the dark face panel
     var typeSpeed: Double = 0.022           // 0 disables the typewriter effect
     var shuffle: Bool = false
     var messagesFile: String = "messages.txt"
@@ -58,6 +60,11 @@ struct Config {
     var maxBubbleWidth: Double = 280        // before scale is applied
 
     var accentColor: Color { Color(hex: accent) }
+
+    var robotStyle: RobotStyle {
+        RobotStyle(accent: Color(hex: accent), shell: Color(hex: shell),
+                   visor: Color(hex: visor), scale: scale, face: face)
+    }
 
     /// Seconds the bubble stays up for a given message.
     func dwell(for text: String) -> Double {
@@ -92,10 +99,70 @@ extension Config {
 
         if let s = obj["dwellMode"] as? String { c.dwellMode = s }
         if let s = obj["accent"] as? String { c.accent = s }
+        if let s = obj["shell"] as? String { c.shell = s }
+        if let s = obj["visor"] as? String { c.visor = s }
         if let s = obj["messagesFile"] as? String, !s.isEmpty { c.messagesFile = s }
         if let s = obj["position"] as? String, let p = Corner(rawValue: s) { c.position = p }
         if let s = obj["face"] as? String, let f = Face(rawValue: s) { c.face = f }
         return c
+    }
+}
+
+extension Config {
+    var dictionary: [String: Any] {
+        [
+            "intervalSeconds": intervalSeconds, "dwellMode": dwellMode,
+            "dwellSeconds": dwellSeconds, "dwellBase": dwellBase,
+            "dwellPerCharacter": dwellPerCharacter, "dwellMax": dwellMax,
+            "scale": scale, "position": position.rawValue, "screenIndex": screenIndex,
+            "face": face.rawValue, "accent": accent, "shell": shell, "visor": visor,
+            "typeSpeed": typeSpeed, "shuffle": shuffle, "messagesFile": messagesFile,
+            "margin": margin, "maxBubbleWidth": maxBubbleWidth,
+        ]
+    }
+
+    /// Writes config.json next to the app. Returns an error string on failure —
+    /// the app bundle can sit somewhere the user can't write to.
+    @discardableResult
+    func save() -> String? {
+        let url = Bundle.main.bundleURL.deletingLastPathComponent()
+            .appendingPathComponent("config.json")
+        do {
+            let data = try JSONSerialization.data(withJSONObject: dictionary,
+                                                  options: [.prettyPrinted, .sortedKeys])
+            try data.write(to: url, options: .atomic)
+            return nil
+        } catch {
+            return "Couldn't save to \(url.path): \(error.localizedDescription)"
+        }
+    }
+}
+
+/// Colors + size + face, everything the robot needs to draw itself.
+struct RobotStyle {
+    let accent: Color
+    let shell: Color
+    let visor: Color
+    let scale: Double
+    let face: Face
+}
+
+extension Color {
+    /// Shifts brightness, so one shell color can drive the whole plastic
+    /// gradient plus the darker ears, arms and neck.
+    func adjust(_ delta: Double) -> Color {
+        guard let c = NSColor(self).usingColorSpace(.sRGB) else { return self }
+        return Color(red: min(1, max(0, Double(c.redComponent) + delta)),
+                     green: min(1, max(0, Double(c.greenComponent) + delta)),
+                     blue: min(1, max(0, Double(c.blueComponent) + delta)))
+    }
+
+    var hexString: String {
+        guard let c = NSColor(self).usingColorSpace(.sRGB) else { return "#000000" }
+        return String(format: "#%02X%02X%02X",
+                      Int(round(c.redComponent * 255)),
+                      Int(round(c.greenComponent * 255)),
+                      Int(round(c.blueComponent * 255)))
     }
 }
 
@@ -126,5 +193,6 @@ extension Color {
 /// Observable box so a config reload re-renders the SwiftUI views in place.
 final class Settings: ObservableObject {
     @Published var cfg: Config
+    @Published var saveError: String?
     init(_ cfg: Config) { self.cfg = cfg }
 }

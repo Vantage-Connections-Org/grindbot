@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -12,22 +13,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var faceItems: [NSMenuItem] = []
     private var timer: Timer?
     private var paused = false
+    private var settingsWindow: NSWindow?
+    private var cancellables = Set<AnyCancellable>()
+    private var applied: Config?
 
     /// Window size at scale 1; everything inside scales with it.
-    private var windowSize: NSSize {
-        NSSize(width: PopupView.baseSize.width * settings.cfg.scale,
-               height: PopupView.baseSize.height * settings.cfg.scale)
+    private func windowSize(_ cfg: Config) -> NSSize {
+        NSSize(width: PopupView.baseSize.width * cfg.scale,
+               height: PopupView.baseSize.height * cfg.scale)
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         deck.reload(settings.cfg)
 
         let host = NSHostingView(rootView: PopupView(model: model, settings: settings))
-        host.frame = NSRect(origin: .zero, size: windowSize)
-        window = NSWindow(contentRect: NSRect(origin: .zero, size: windowSize),
+        host.frame = NSRect(origin: .zero, size: windowSize(settings.cfg))
+        window = NSWindow(contentRect: NSRect(origin: .zero, size: windowSize(settings.cfg)),
                           styleMask: .borderless, backing: .buffered, defer: false)
         window.contentView = host
-        window.setContentSize(windowSize)
+        window.setContentSize(windowSize(settings.cfg))
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = false
@@ -42,10 +46,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil, queue: .main) { [weak self] _ in self?.reposition() }
 
         buildMenu()
+        applied = settings.cfg
+        observeSettings()
         startTimer()
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
             guard let self, !self.paused else { return }
             self.next()
+        }
+    }
+
+    // MARK: - Live settings
+
+    private func observeSettings() {
+        // @Published fires before the property is written, so act on the new
+        // value handed to the sink rather than reading settings.cfg back.
+        settings.$cfg
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] cfg in self?.apply(cfg) }
+            .store(in: &cancellables)
+
+        settings.$cfg
+            .debounce(for: .milliseconds(400), scheduler: DispatchQueue.main)
+            .sink { [weak self] cfg in self?.settings.saveError = cfg.save() }
+            .store(in: &cancellables)
+    }
+
+    private func apply(_ cfg: Config) {
+        defer { applied = cfg }
+        let old = applied
+
+        if old?.scale != cfg.scale {
+            window.setContentSize(windowSize(cfg))
+        }
+        if old?.scale != cfg.scale || old?.position != cfg.position || old?.screenIndex != cfg.screenIndex {
+            reposition(cfg)
+        }
+        if old?.messagesFile != cfg.messagesFile || old?.shuffle != cfg.shuffle {
+            deck.reload(cfg)
+        }
+        // Only on a real change — otherwise every slider tick restarts the countdown.
+        if old?.intervalSeconds != cfg.intervalSeconds, !paused {
+            startTimer(cfg)
+        }
+        for item in faceItems {
+            item.state = (item.representedObject as? String) == cfg.face.rawValue ? .on : .off
         }
     }
 
@@ -61,6 +105,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Explicit targets throughout: a nil target silently disables the item.
         for item in [
+            NSMenuItem(title: "Settings…", action: #selector(showSettings), keyEquivalent: ","),
             NSMenuItem(title: "Say something now", action: #selector(sayNow), keyEquivalent: "s"),
             pause,
         ] {
@@ -101,26 +146,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Placement
 
-    private func reposition() {
+    private func reposition(_ cfg: Config? = nil) {
+        let cfg = cfg ?? settings.cfg
         let screens = NSScreen.screens
         guard !screens.isEmpty else { return }
         // Pinned by default: NSScreen.main follows keyboard focus, so the popup
         // would otherwise land on a different display run to run.
-        let idx = settings.cfg.screenIndex
+        let idx = cfg.screenIndex
         let screen = screens.indices.contains(idx) ? screens[idx] : (NSScreen.main ?? screens[0])
         let v = screen.visibleFrame
         let f = window.frame.size
 
-        let x = settings.cfg.position.isLeft ? v.minX : v.maxX - f.width
-        let y = settings.cfg.position.isTop ? v.maxY - f.height : v.minY
+        let x = cfg.position.isLeft ? v.minX : v.maxX - f.width
+        let y = cfg.position.isTop ? v.maxY - f.height : v.minY
         window.setFrameOrigin(CGPoint(x: x, y: y))
     }
 
     // MARK: - Speaking
 
-    private func startTimer() {
+    private func startTimer(_ cfg: Config? = nil) {
+        let cfg = cfg ?? settings.cfg
         timer?.invalidate()
-        let t = Timer(timeInterval: settings.cfg.intervalSeconds, repeats: true) { [weak self] _ in
+        let t = Timer(timeInterval: cfg.intervalSeconds, repeats: true) { [weak self] _ in
             self?.next()
         }
         RunLoop.main.add(t, forMode: .common)
@@ -167,7 +214,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         for item in faceItems {
             item.state = (item.representedObject as? String) == settings.cfg.face.rawValue ? .on : .off
         }
-        window.setContentSize(windowSize)
+        window.setContentSize(windowSize(settings.cfg))
         reposition()
         startTimer()
         next()
@@ -179,6 +226,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func open(_ name: String) {
         guard let url = fileNextToApp(name) else { return }
         NSWorkspace.shared.open(url)
+    }
+
+    @objc private func showSettings() {
+        if settingsWindow == nil {
+            let view = SettingsView(settings: settings, onPreview: { [weak self] in self?.next() })
+            let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 520, height: 720),
+                             styleMask: [.titled, .closable, .miniaturizable, .resizable],
+                             backing: .buffered, defer: false)
+            w.title = "GrindBot Settings"
+            w.contentView = NSHostingView(rootView: view)
+            w.isReleasedWhenClosed = false   // accessory apps reuse the window
+            w.center()
+            settingsWindow = w
+        }
+        NSApp.activate(ignoringOtherApps: true)   // .accessory apps aren't frontmost
+        settingsWindow?.makeKeyAndOrderFront(nil)
     }
 
     @objc private func quitApp() { NSApp.terminate(nil) }

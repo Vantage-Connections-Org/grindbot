@@ -12,7 +12,8 @@ Most changes don't need code — see the config table in the
 | `Sources/PopupModel.swift` | Timing for one message: typing, dwell, hide. Also `MessageDeck`, which reads the message file |
 | `Sources/RobotView.swift` | The robot drawing. `RobotView` is the body, `FaceView` is what's inside the visor |
 | `Sources/PopupView.swift` | `BubbleShape` (the speech bubble) and the layout that mirrors for left corners |
-| `Sources/AppDelegate.swift` | Window setup, screen placement, menu bar, the interval timer |
+| `Sources/SettingsView.swift` | The settings window UI |
+| `Sources/AppDelegate.swift` | Window setup, screen placement, menu bar, the interval timer, and the live-apply pipeline |
 
 Everything is drawn with SwiftUI shapes — no image assets, so any change is a
 code change and scales cleanly at any size.
@@ -107,6 +108,35 @@ If you make the bubble much wider or taller, raise `baseSize` too — content
 larger than the window gets clipped, and a window taller than the screen gets
 pushed off the edge.
 
+## Add a new setting
+
+Four steps:
+
+1. Add the property to `Config` in `Sources/Config.swift`, with its default.
+2. Parse it in `Config.load()` — use `number(...)` for numbers, or the
+   `obj["key"] as? String` pattern for everything else.
+3. Add it to `Config.dictionary` so the settings window can save it.
+4. Add a control to the matching section in `Sources/SettingsView.swift`.
+   Bind straight to the config: `$settings.cfg.yourKey`.
+
+If the change needs to do something beyond redrawing — resize the window,
+restart the timer, reload the message file — handle it in `AppDelegate.apply(_:)`,
+which receives every config change.
+
+## How live apply works
+
+`Settings` holds the config as `@Published`. `AppDelegate.observeSettings()`
+subscribes twice:
+
+- immediately, to apply the change (resize, reposition, reload messages,
+  restart the timer)
+- debounced by 400ms, to write `config.json` — so dragging a slider doesn't
+  hammer the disk
+
+`apply(_:)` compares against the previously applied config and only acts on
+what actually changed. That matters for the interval timer: restarting it on
+every tick of a slider would reset the countdown each time.
+
 ## Gotchas
 
 - **Give the root view a definite frame.** `NSHostingView` grows the window to
@@ -117,6 +147,12 @@ pushed off the edge.
 - **`NSScreen.main` follows keyboard focus**, so it isn't stable across
   launches on a multi-display setup. `screenIndex` indexes `NSScreen.screens`
   instead.
+- **`@Published` fires *before* the value is written.** The sink receives the
+  new config, but reading `settings.cfg` back inside the sink can give you the
+  old one. Use the value handed to you.
+- **An `.accessory` app is never frontmost.** Call
+  `NSApp.activate(ignoringOtherApps: true)` before showing the settings
+  window, or it opens behind whatever you're looking at.
 - **The window is click-through** (`ignoresMouseEvents = true`). If you want
   the robot to respond to clicks, turn that off — but then it can intercept
   clicks meant for whatever is underneath.

@@ -79,7 +79,7 @@ struct PopupView: View {
     }
 
     private var robot: some View {
-        RobotView(face: cfg.face, accent: cfg.accentColor, scale: cfg.scale, blink: model.blink)
+        RobotView(style: cfg.robotStyle, blink: model.blink)
             .frame(width: 64 * s)
     }
 

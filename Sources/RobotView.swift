@@ -3,25 +3,27 @@ import SwiftUI
 /// The robot. Body and shell are shared; only what sits inside the visor
 /// changes between faces, so a new face is one `case` in `FaceView`.
 struct RobotView: View {
-    let face: Face
-    let accent: Color
-    let scale: Double
+    let style: RobotStyle
     let blink: Bool
 
     @State private var bob = false
 
-    private var s: CGFloat { CGFloat(scale) }
+    private var s: CGFloat { CGFloat(style.scale) }
+    private var accent: Color { style.accent }
 
+    /// One shell color drives the plastic gradient and every darker part.
     private var shell: LinearGradient {
-        LinearGradient(colors: [Color(white: 0.99), Color(white: 0.86)],
+        LinearGradient(colors: [style.shell.adjust(0.02), style.shell.adjust(-0.13)],
                        startPoint: .top, endPoint: .bottom)
     }
+    private var trim: Color { style.shell.adjust(-0.20) }
+    private var trimLight: Color { style.shell.adjust(-0.17) }
 
     var body: some View {
         VStack(spacing: 0) {
             antenna
             head
-            Rectangle().fill(Color(white: 0.72)).frame(width: 8 * s, height: 4 * s)  // neck
+            Rectangle().fill(trim).frame(width: 8 * s, height: 4 * s)  // neck
             torso
         }
         .shadow(color: .black.opacity(0.28), radius: 10 * s, y: 5 * s)
@@ -32,7 +34,7 @@ struct RobotView: View {
 
     private var antenna: some View {
         ZStack(alignment: .bottom) {
-            Capsule().fill(Color(white: 0.72))
+            Capsule().fill(trim)
                 .frame(width: 2.5 * s, height: 12 * s)
                 .offset(y: -5 * s)
             Circle().fill(accent)
@@ -54,9 +56,9 @@ struct RobotView: View {
                 .frame(width: 54 * s, height: 44 * s)
 
             RoundedRectangle(cornerRadius: 9 * s, style: .continuous)
-                .fill(Color(white: 0.13))
+                .fill(style.visor)
                 .frame(width: 44 * s, height: 30 * s)
-                .overlay(FaceView(face: face, accent: accent, scale: scale, blink: blink))
+                .overlay(FaceView(style: style, blink: blink))
                 .overlay(alignment: .top) {
                     RoundedRectangle(cornerRadius: 9 * s, style: .continuous)
                         .fill(LinearGradient(colors: [.white.opacity(0.18), .clear],
@@ -71,7 +73,7 @@ struct RobotView: View {
     }
 
     private var ear: some View {
-        Capsule().fill(Color(white: 0.78)).frame(width: 5 * s, height: 14 * s)
+        Capsule().fill(trimLight).frame(width: 5 * s, height: 14 * s)
     }
 
     private var torso: some View {
@@ -92,24 +94,23 @@ struct RobotView: View {
     }
 
     private var arm: some View {
-        Capsule().fill(Color(white: 0.80)).frame(width: 5 * s, height: 15 * s)
+        Capsule().fill(style.shell.adjust(-0.16)).frame(width: 5 * s, height: 15 * s)
     }
 }
 
 /// What shows inside the visor. Add a face: add a `case` here and to `Face`.
 struct FaceView: View {
-    let face: Face
-    let accent: Color
-    let scale: Double
+    let style: RobotStyle
     let blink: Bool
 
-    private var s: CGFloat { CGFloat(scale) }
+    private var s: CGFloat { CGFloat(style.scale) }
+    private var accent: Color { style.accent }
     /// Blinking squashes the eyes vertically — shared by every face.
     private var lid: CGFloat { blink ? 0.12 : 1 }
 
     var body: some View {
         Group {
-            switch face {
+            switch style.face {
             case .visor:   visor
             case .cyclops: cyclops
             case .pixel:   pixel
