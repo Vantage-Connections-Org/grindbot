@@ -1,0 +1,20 @@
+{
+  "intervalSeconds": 20,
+  "dwellMode": "length",
+  "dwellBase": 3.2,
+  "dwellPerCharacter": 0.055,
+  "dwellMax": 9,
+  "dwellSeconds": 5,
+  "scale": 1.5,
+  "position": "bottomRight",
+  "screenIndex": 0,
+  "face": "visor",
+  "accent": "#33D6A8",
+  "shell": "#FCFCFC",
+  "visor": "#212121",
+  "typeSpeed": 0.022,
+  "shuffle": false,
+  "messagesFile": "messages.txt",
+  "margin": 22,
+  "maxBubbleWidth": 280
+}

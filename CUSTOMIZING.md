@@ -24,6 +24,13 @@ After editing, rebuild and relaunch:
 ./build.sh && killall GrindBot; open GrindBot.app
 ```
 
+## Config files
+
+`config.default.json` is tracked in git and holds the shipped defaults.
+`build.sh` copies it to `config.json` on first build, and `config.json` is
+gitignored — so personal settings stay out of commits. If you change a
+default for everyone, edit `config.default.json`.
+
 ## Add a message pack
 
 Create `packs/yours.txt`, one message per line, then point `config.json` at

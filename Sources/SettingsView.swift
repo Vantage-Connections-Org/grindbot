@@ -51,8 +51,16 @@ struct SettingsView: View {
 
     private var timing: some View {
         Section("Timing") {
-            slider("Every", value: $settings.cfg.intervalSeconds, in: 5...300, step: 1,
-                   format: { "\(Int($0))s" })
+            HStack {
+                Text("Every").frame(width: 110, alignment: .leading)
+                // Snapped to sensible steps: a linear 5s–5h slider would make
+                // everything under a minute impossible to hit.
+                Slider(value: intervalIndex, in: 0...Double(SettingsView.intervals.count - 1), step: 1)
+                Text(SettingsView.humanDuration(cfg.intervalSeconds))
+                    .font(.callout.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .frame(width: 90, alignment: .trailing)
+            }
 
             Picker("Time on screen", selection: $settings.cfg.dwellMode) {
                 Text("Scale with message length").tag("length")
@@ -204,6 +212,36 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 90, alignment: .trailing)
         }
+    }
+
+    /// Steps the "Every" slider snaps to, 5 seconds up to 5 hours.
+    static let intervals: [Double] = [
+        5, 10, 15, 20, 30, 45,
+        60, 90, 120, 180, 300, 600, 900, 1200, 1800, 2700,
+        3600, 5400, 7200, 10800, 14400, 18000,
+    ]
+
+    private var intervalIndex: Binding<Double> {
+        Binding(
+            get: {
+                let target = settings.cfg.intervalSeconds
+                let nearest = SettingsView.intervals
+                    .enumerated()
+                    .min { abs($0.element - target) < abs($1.element - target) }
+                return Double(nearest?.offset ?? 0)
+            },
+            set: { settings.cfg.intervalSeconds = SettingsView.intervals[Int($0.rounded())] }
+        )
+    }
+
+    static func humanDuration(_ v: Double) -> String {
+        if v < 60 { return "\(Int(v))s" }
+        if v < 3600 {
+            let m = Int(v) / 60, s = Int(v) % 60
+            return s == 0 ? "\(m)m" : "\(m)m \(s)s"
+        }
+        let h = Int(v) / 3600, m = (Int(v) % 3600) / 60
+        return m == 0 ? "\(h)h" : "\(h)h \(m)m"
     }
 
     private func colorBinding(_ key: WritableKeyPath<Config, String>) -> Binding<Color> {

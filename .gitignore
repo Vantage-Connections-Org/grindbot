@@ -1,3 +1,6 @@
 GrindBot.app/
 .DS_Store
 *.dSYM/
+
+# personal settings — seeded from config.default.json on first build
+config.json

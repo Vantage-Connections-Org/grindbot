@@ -44,11 +44,14 @@ Everything is under the 🤖 icon:
 
 ## Settings window
 
+<img src="docs/settings.png" alt="GrindBot settings window" width="420">
+
 **Settings…** in the menu opens a window with every option in one place:
 timing, size, screen corner and display, robot colors, face, and message file.
 
 Changes apply immediately — the robot resizes, moves, or recolors as you drag
-a slider — and save themselves to `config.json`. There's no OK or Cancel; what
+a slider — and save themselves to `config.json`. The **Every** slider snaps to
+sensible steps from 5 seconds up to 5 hours. There's no OK or Cancel; what
 you see is what's running. **Show a message now** fires one so you can check
 the result without waiting for the timer.
 
@@ -88,13 +91,17 @@ everything has been shown).
 
 ## Configuration
 
-Edit `config.json` next to the app, then **Reload config & messages**. Every
-key is optional; anything missing or malformed falls back to the default, so
+`config.json` is yours: the first build copies it from `config.default.json`,
+and it's gitignored so your settings never turn up as repo changes. Delete it
+and rebuild to get the defaults back.
+
+Edit it next to the app, then **Reload config & messages**. Every key is
+optional; anything missing or malformed falls back to the default, so
 a broken file degrades rather than crashes.
 
 | Key | Default | What it does |
 |---|---|---|
-| `intervalSeconds` | `20` | Seconds between messages |
+| `intervalSeconds` | `20` | Seconds between messages. Anything from 1 second up; the settings slider covers 5s to 5h |
 | `dwellMode` | `"length"` | `"length"` scales time on screen with message length, `"fixed"` uses the same time for every message |
 | `dwellBase` | `3.2` | Length mode: minimum seconds on screen |
 | `dwellPerCharacter` | `0.055` | Length mode: seconds added per character |
@@ -126,6 +133,8 @@ capped at `dwellMax`. Typing happens inside that window, so longer messages
 still get read time after they finish typing.
 
 ## Faces
+
+![The five faces](docs/faces.png)
 
 `visor` (two glowing eyes), `cyclops` (one big lens), `pixel` (8-bit),
 `angry` (angled brows), `dot` (eyes and a smile).

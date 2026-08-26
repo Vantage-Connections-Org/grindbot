@@ -6,6 +6,9 @@ APP="GrindBot.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
+# First run: seed a personal config from the shipped defaults.
+[ -f config.json ] || cp config.default.json config.json
+
 swiftc -O Sources/*.swift -o "$APP/Contents/MacOS/GrindBot"
 cp messages.txt config.json "$APP/Contents/Resources/"
 
