@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>GrindBot</AssemblyName>
+    <RootNamespace>GrindBot</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <StartupObject>GrindBot.Program</StartupObject>
+    <!-- No App.xaml: Program.cs owns Main so the whole app is plain C#. -->
+    <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <DebugType>none</DebugType>
+    <!-- WFAC010: the WinForms analyzer wants HighDpiMode set in code, but WPF
+         needs PerMonitorV2 declared in the manifest before any window exists. -->
+    <NoWarn>$(NoWarn);WFAC010</NoWarn>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <!-- Embedded so a copied dist\ folder can seed itself on a fresh machine. -->
+    <EmbeddedResource Include="..\messages.txt" LogicalName="messages.txt" />
+    <EmbeddedResource Include="..\config.default.json" LogicalName="config.default.json" />
+  </ItemGroup>
+
+</Project>

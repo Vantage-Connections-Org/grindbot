@@ -1,13 +1,17 @@
 # GrindBot
 
-A tiny robot pops up in the corner of your Mac screen, says something, and
+A tiny robot pops up in the corner of your screen, says something, and
 disappears. Built for screen recordings and social posts.
+
+macOS and Windows. The rest of this README is the macOS build; for Windows see
+**[windows/README.md](windows/README.md)** — same robot, same `config.json`,
+same message packs, built with `windows\build.ps1`.
 
 No dock icon, no window to manage, no backend. It sits in the menu bar and
 draws itself over whatever you're doing — click-through, so it never steals
 focus or interrupts what you're recording.
 
-## Requirements
+## Requirements (macOS)
 
 macOS 13+ and the Xcode command line tools:
 
@@ -71,13 +75,19 @@ WHO IS GONNA CARRY THE BOATS?
 
 Edit the file, then hit **Reload config & messages**. No rebuild needed.
 
-Three packs ship in `packs/`:
+Five packs ship in `packs/`:
 
 | Pack | Lines | Tone |
 |---|---|---|
 | `classic.txt` | 5 | The originals |
 | `hustle.txt` | 24 | Aggressive entrepreneur |
 | `discipline.txt` | 15 | No excuses, drill sergeant |
+| `habits.txt` | 30 | Hours, momentum, decay — aimed at the habit |
+| `obituary.txt` | 30 | Mortality and legacy. The bleak one |
+
+`habits.txt` and `obituary.txt` run longer per line than the others, so they
+wrap to two or three lines in the bubble and sit on screen longer under the
+default `dwellMode: "length"`.
 
 Point `messagesFile` at one, or write your own:
 
@@ -145,6 +155,23 @@ Pick one in the settings window, from the **Face** menu, or set `face` in
 Colors are independent of the face: `accent` drives the eyes, antenna and
 chest light, `shell` the body, `visor` the panel behind the eyes. A dark
 `shell` with a bright `accent` gives a very different robot from the default.
+
+## Windows
+
+The Windows port lives in [`windows/`](windows/) and is a full rewrite in WPF —
+same robot, same faces, same `config.json`, same message packs, driven from the
+system tray instead of the menu bar.
+
+```powershell
+cd windows
+.\build.ps1 -Run
+```
+
+Settings live in `%APPDATA%\GrindBot` rather than next to the app, since the
+Windows build folder is disposable. It adds one config key of its own, `theme`
+(`auto` / `dark` / `light`), for the speech bubble, since Windows has no
+equivalent of macOS's live-blurred `.regularMaterial`. See [windows/README.md](windows/README.md) for the details
+and the handful of platform differences.
 
 ## Customizing
 
