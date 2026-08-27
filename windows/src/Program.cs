@@ -134,7 +134,7 @@ public sealed class Program : System.Windows.Application
         if (looksDifferent) _popup.Rebuild(cfg);
         else if (old.screenIndex != cfg.screenIndex) _popup.Reposition(cfg);
 
-        if (old.messagesFile != cfg.messagesFile || old.shuffle != cfg.shuffle)
+        if (old.MessageFilesKey() != cfg.MessageFilesKey() || old.shuffle != cfg.shuffle)
             _deck.Reload(cfg);
 
         // Only on a real change — otherwise every slider tick restarts the countdown.
@@ -201,7 +201,8 @@ public sealed class Program : System.Windows.Application
 
         menu.Items.Add(new WinForms.ToolStripSeparator());
         menu.Items.Add(Item("Reload config && messages", (_, _) => Reload()));
-        menu.Items.Add(Item("Edit messages…", (_, _) => OpenFile(_settings.Cfg.messagesFile)));
+        menu.Items.Add(Item("Edit messages…", (_, _) =>
+            OpenFile(_settings.Cfg.MessageFiles().FirstOrDefault() ?? "messages.txt")));
         menu.Items.Add(Item("Edit config.json…", (_, _) =>
         {
             // Nothing saved yet? Write it first, so the item never no-ops.
@@ -300,7 +301,8 @@ public sealed class Program : System.Windows.Application
         var message = _deck.Next();
         if (message is null)
         {
-            _popup.Say($"{_settings.Cfg.messagesFile} is empty — add one line per message.");
+            var files = string.Join(", ", _settings.Cfg.MessageFiles());
+            _popup.Say($"No messages in {files} — add one line per message.");
             return;
         }
         _popup.Say(message);

@@ -37,6 +37,7 @@ public sealed class SettingsWindow : Window
     private readonly StackPanel _timingRows = new();
     private readonly StackPanel _faceRow = new();
     private readonly TextBlock _errorText = new();
+    private readonly TextBlock _messageCount = new();
     private readonly List<Action> _sync = new();
     private string _lookSignature = "";
     private string _dwellSignature = "";
@@ -397,10 +398,73 @@ public sealed class SettingsWindow : Window
         var body = new StackPanel();
 
         var files = Paths.DiscoverMessageFiles();
-        if (!files.Contains(Cfg.messagesFile)) files.Insert(0, Cfg.messagesFile);
-        body.Children.Add(ComboRow("Message file", files.Cast<object>().ToList(),
-            () => Math.Max(0, files.IndexOf(Cfg.messagesFile)),
-            i => Edit(c => c.messagesFile = files[i])));
+        foreach (var f in Cfg.MessageFiles())
+            if (!files.Contains(f, StringComparer.OrdinalIgnoreCase)) files.Insert(0, f);
+
+        // "Everything" saves as a flag rather than a frozen list, so a pack you
+        // drop in later is picked up without revisiting this screen.
+        var all = new CheckBox
+        {
+            Content = "Everything — draw from every file below",
+            Foreground = Fg.Brush(),
+            FontWeight = FontWeights.SemiBold,
+            Margin = new Thickness(0, 0, 0, 6),
+            ToolTip = "Lines shared between files are only counted once",
+        };
+        all.Checked += (_, _) => Edit(c => c.allMessageFiles = true);
+        all.Unchecked += (_, _) => Edit(c => c.allMessageFiles = false);
+        body.Children.Add(all);
+
+        var boxes = new List<CheckBox>();
+        var list = new StackPanel { Margin = new Thickness(14, 0, 0, 0) };
+        foreach (var file in files)
+        {
+            var name = file;
+            var box = new CheckBox
+            {
+                Content = name,
+                Foreground = Fg.Brush(),
+                Margin = new Thickness(0, 3, 0, 3),
+                Tag = name,
+            };
+            void Toggle()
+            {
+                if (_syncing) return;
+                var picked = boxes.Where(b => b.IsChecked == true)
+                                  .Select(b => (string)b.Tag!)
+                                  .ToList();
+                // Never leave the deck with nothing to say.
+                if (picked.Count == 0) { box.IsChecked = true; return; }
+                Edit(c =>
+                {
+                    c.messageFileList = picked.Count > 1 ? picked : null;
+                    c.messagesFile = picked[0];
+                });
+            }
+            box.Checked += (_, _) => Toggle();
+            box.Unchecked += (_, _) => Toggle();
+            boxes.Add(box);
+            list.Children.Add(box);
+        }
+        body.Children.Add(list);
+
+        _sync.Add(() =>
+        {
+            all.IsChecked = Cfg.allMessageFiles;
+            var active = new HashSet<string>(Cfg.MessageFiles(), StringComparer.OrdinalIgnoreCase);
+            foreach (var b in boxes)
+            {
+                b.IsChecked = Cfg.allMessageFiles || active.Contains((string)b.Tag!);
+                // Under "Everything" they show the truth but stop being controls.
+                b.IsEnabled = !Cfg.allMessageFiles;
+            }
+            _messageCount.Text = DescribeDeck();
+        });
+
+        _messageCount.Foreground = Dim.Brush();
+        _messageCount.FontSize = 11.5;
+        _messageCount.Margin = new Thickness(0, 8, 0, 0);
+        body.Children.Add(_messageCount);
 
         var shuffle = new CheckBox
         {
@@ -414,16 +478,29 @@ public sealed class SettingsWindow : Window
         body.Children.Add(shuffle);
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 6, 0, 0) };
-        buttons.Children.Add(Button("Edit this file…", () => Open(Paths.NextToApp(Cfg.messagesFile))));
+        buttons.Children.Add(Button("Edit first file…", () => Open(First())));
         buttons.Children.Add(Button("Show in Explorer", () =>
         {
-            var path = Paths.NextToApp(Cfg.messagesFile);
+            var path = First();
             if (path is null) return;
             try { Process.Start("explorer.exe", "/select,\"" + path + "\""); } catch { }
         }));
         body.Children.Add(buttons);
 
         return Group("Messages", body);
+    }
+
+    private string? First() =>
+        Paths.NextToApp(Cfg.MessageFiles().FirstOrDefault() ?? "messages.txt");
+
+    /// Reads the selection off disk so the count reflects what will actually
+    /// play, deduped, rather than the sum of the files.
+    private string DescribeDeck()
+    {
+        var deck = new MessageDeck();
+        deck.Reload(Cfg);
+        var n = Cfg.MessageFiles().Count;
+        return $"{deck.Count} messages from {n} file{(n == 1 ? "" : "s")}";
     }
 
     private UIElement BuildFooter()

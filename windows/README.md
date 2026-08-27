@@ -107,6 +107,10 @@ pressing Enter works too.
 **Only speak once I've gone quiet** gates messages on idle time — see below. The
 **Quiet for** threshold under it greys out while the gate is off.
 
+**Messages** lists every message file it can find with a checkbox each, plus an
+**Everything** box at the top, and a live count of how many messages the current
+selection actually yields once duplicates are removed.
+
 ## Messages and configuration
 
 Identical to the macOS build — see the [main README](../README.md) for
@@ -127,6 +131,39 @@ And three keys are Windows-only:
 | `theme` | `"auto"` | Speech-bubble colors: `auto` follows your Windows light/dark setting, `dark` and `light` pin it |
 | `idleOnly` | `false` | Only speak once you've gone quiet. Off by default — the robot behaves exactly as it always did |
 | `idleSeconds` | `120` | How long you must be quiet first. Clamped to 5 seconds minimum |
+| `allMessageFiles` | `false` | Draw from every message file found, not just one |
+
+`messagesFile` also accepts an array on Windows, to draw from a chosen few:
+
+```json
+{ "messagesFile": ["packs/habits.txt", "packs/obituary.txt"] }
+```
+
+## Drawing from more than one file
+
+The shipped packs are small and single-note. To run them together, tick
+**Everything** in the settings window's Messages section, or set:
+
+```json
+{ "allMessageFiles": true }
+```
+
+That pools `messages.txt` and every `packs/*.txt` it can find, across both the
+app folder and `%APPDATA%\GrindBot\packs`. Lines that appear in more than one
+file are counted once — `messages.txt` ships identical to `packs/classic.txt`,
+so without that those five would land twice as often as everything else. The
+settings window shows the real total under the list (e.g. *104 messages from 6
+files*).
+
+`allMessageFiles` is a flag rather than a frozen list, so a pack you drop in
+later joins the pool without revisiting the setting. With `shuffle` on, the
+whole pool shuffles together; with it off, files play in order, one after the
+other.
+
+To pick a specific few instead, untick **Everything** and check the ones you
+want — that saves as the array form above. `messagesFile` is always left
+holding a single valid path as well, so the macOS build reads something
+sensible from the same file.
 
 ## Only when you're idle
 

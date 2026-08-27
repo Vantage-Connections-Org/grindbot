@@ -43,7 +43,9 @@ public sealed class Config
     public string visor = "#212121";           // the dark face panel
     public double typeSpeed = 0.022;           // 0 disables the typewriter effect
     public bool shuffle = false;
-    public string messagesFile = "messages.txt";
+    public string messagesFile = "messages.txt";   // single path; what macOS reads
+    public List<string>? messageFileList;          // Windows: "messagesFile" as an array
+    public bool allMessageFiles = false;           // Windows: draw from every file found
     public double margin = 22;                 // gap from the screen edge, in DIPs
     public double maxBubbleWidth = 280;        // before scale is applied
     public string theme = "auto";              // Windows-only: auto | dark | light
@@ -61,7 +63,26 @@ public sealed class Config
         return Math.Min(dwellMax, dwellBase + TextX.GraphemeCount(text) * dwellPerCharacter);
     }
 
-    public Config Clone() => (Config)MemberwiseClone();
+    /// Every file the deck should draw from, in order.
+    public List<string> MessageFiles()
+    {
+        if (allMessageFiles) return Paths.DiscoverMessageFiles();
+        if (messageFileList is { Count: > 0 }) return new List<string>(messageFileList);
+        return new List<string> { messagesFile };
+    }
+
+    /// Cheap comparison so a reload only happens when the selection really moved.
+    public string MessageFilesKey() =>
+        allMessageFiles ? "*" : string.Join("|", MessageFiles());
+
+    public Config Clone()
+    {
+        var c = (Config)MemberwiseClone();
+        // MemberwiseClone is shallow: without this, editing a clone's list
+        // would reach back and mutate the config it was copied from.
+        c.messageFileList = messageFileList is null ? null : new List<string>(messageFileList);
+        return c;
+    }
 
     /// Missing file, malformed JSON, or unknown keys all degrade to defaults
     /// rather than failing — this file is meant to be hand-edited.
@@ -119,7 +140,23 @@ public sealed class Config
         if (Str("shell") is string sh) c.shell = sh;
         if (Str("visor") is string v) c.visor = v;
         if (Str("theme") is string th) c.theme = th;
+        c.allMessageFiles = Bool("allMessageFiles") ?? c.allMessageFiles;
         if (Str("messagesFile") is string mf && mf.Length > 0) c.messagesFile = mf;
+        else if (obj["messagesFile"] is JsonArray arr)
+        {
+            // Array form is a Windows extension. macOS reads this key as a
+            // string, sees nothing usable, and falls back to its default —
+            // which is why messagesFile below is also kept as a valid path.
+            var list = arr.Select(n => n?.GetValue<string>())
+                          .Where(v => !string.IsNullOrWhiteSpace(v))
+                          .Select(v => v!)
+                          .ToList();
+            if (list.Count > 0)
+            {
+                c.messageFileList = list;
+                c.messagesFile = list[0];
+            }
+        }
         if (Str("position") is string p && Enum.TryParse<Corner>(p, true, out var corner)) c.position = corner;
         if (Str("face") is string f && Enum.TryParse<Face>(f, true, out var fc)) c.face = fc;
         return c;
@@ -128,27 +165,38 @@ public sealed class Config
     private JsonObject ToJson()
     {
         // Sorted keys, to match the macOS build's output and keep diffs quiet.
+        // Slider drift turns 1.2 into 1.2000000000000002; nothing here needs
+        // more than four places, and the file is meant to be hand-edited.
+        static double R(double v) => Math.Round(v, 4);
+
         var o = new JsonObject();
         o["accent"] = accent;
-        o["dwellBase"] = dwellBase;
-        o["dwellMax"] = dwellMax;
+        o["dwellBase"] = R(dwellBase);
+        o["dwellMax"] = R(dwellMax);
         o["dwellMode"] = dwellMode;
-        o["dwellPerCharacter"] = dwellPerCharacter;
-        o["dwellSeconds"] = dwellSeconds;
+        o["dwellPerCharacter"] = R(dwellPerCharacter);
+        o["dwellSeconds"] = R(dwellSeconds);
         o["face"] = face.ToString();
         o["idleOnly"] = idleOnly;
-        o["idleSeconds"] = idleSeconds;
-        o["intervalSeconds"] = intervalSeconds;
-        o["margin"] = margin;
-        o["maxBubbleWidth"] = maxBubbleWidth;
-        o["messagesFile"] = messagesFile;
+        o["idleSeconds"] = R(idleSeconds);
+        o["intervalSeconds"] = R(intervalSeconds);
+        o["margin"] = R(margin);
+        o["maxBubbleWidth"] = R(maxBubbleWidth);
+        o["allMessageFiles"] = allMessageFiles;
+        if (messageFileList is { Count: > 1 })
+        {
+            var arr = new JsonArray();
+            foreach (var f in messageFileList) arr.Add(f);
+            o["messagesFile"] = arr;
+        }
+        else o["messagesFile"] = messagesFile;
         o["position"] = position.ToString();
-        o["scale"] = scale;
+        o["scale"] = R(scale);
         o["screenIndex"] = screenIndex;
         o["shell"] = shell;
         o["shuffle"] = shuffle;
         o["theme"] = theme;
-        o["typeSpeed"] = typeSpeed;
+        o["typeSpeed"] = R(typeSpeed);
         o["visor"] = visor;
         return o;
     }

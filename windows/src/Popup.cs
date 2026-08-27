@@ -118,10 +118,17 @@ public sealed class MessageDeck
 
     public int Count => _messages.Count;
 
+    /// Files are concatenated in order. messages.txt ships identical to
+    /// packs/classic.txt, so drawing from everything would otherwise weight
+    /// those five lines double — dedupe on the line itself, first one wins.
     public void Reload(Config cfg)
     {
         _shuffle = cfg.shuffle;
-        _messages = Read(cfg.messagesFile);
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        _messages = cfg.MessageFiles()
+            .SelectMany(Read)
+            .Where(seen.Add)
+            .ToList();
         _queue = new List<string>();
     }
 
