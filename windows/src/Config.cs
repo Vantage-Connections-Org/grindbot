@@ -47,6 +47,8 @@ public sealed class Config
     public double margin = 22;                 // gap from the screen edge, in DIPs
     public double maxBubbleWidth = 280;        // before scale is applied
     public string theme = "auto";              // Windows-only: auto | dark | light
+    public bool idleOnly = false;              // Windows-only: hold messages while you're working
+    public double idleSeconds = 120;           // Windows-only: how long you must be idle first
 
     public Color AccentColor => ColorX.FromHex(accent);
     public RobotStyle RobotStyle =>
@@ -109,6 +111,8 @@ public sealed class Config
         c.maxBubbleWidth    = Num("maxBubbleWidth") ?? c.maxBubbleWidth;
         c.screenIndex       = Num("screenIndex") is double si ? (int)si : c.screenIndex;
         c.shuffle           = Bool("shuffle") ?? c.shuffle;
+        c.idleOnly          = Bool("idleOnly") ?? c.idleOnly;
+        c.idleSeconds       = Num("idleSeconds") is double idle ? Math.Max(5, idle) : c.idleSeconds;
 
         if (Str("dwellMode") is string dm) c.dwellMode = dm;
         if (Str("accent") is string a) c.accent = a;
@@ -132,6 +136,8 @@ public sealed class Config
         o["dwellPerCharacter"] = dwellPerCharacter;
         o["dwellSeconds"] = dwellSeconds;
         o["face"] = face.ToString();
+        o["idleOnly"] = idleOnly;
+        o["idleSeconds"] = idleSeconds;
         o["intervalSeconds"] = intervalSeconds;
         o["margin"] = margin;
         o["maxBubbleWidth"] = maxBubbleWidth;

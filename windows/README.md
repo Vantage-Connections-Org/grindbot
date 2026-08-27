@@ -80,6 +80,7 @@ right-click opens the menu; double-click fires a message immediately.
 | Say something now | Fire a message immediately — useful for hitting a cue while recording |
 | Turn off / Turn on | Stop the popups without quitting. The icon closes its eyes. Turning it back on fires one right away |
 | Face | Switch robot face |
+| Only when I'm idle | Hold messages until you've stopped typing, clicking and scrolling |
 | Start with Windows | Add or remove GrindBot from your login items (one `HKCU\...\Run` value, nothing else) |
 | Reload config & messages | Re-read both files without rebuilding |
 | Edit messages… / Edit config.json… | Open the files in your default editor |
@@ -103,6 +104,9 @@ Windows has no system color picker control to borrow, so each color is a hex
 field plus red/green/blue sliders and a live swatch. Typing a hex value and
 pressing Enter works too.
 
+**Only speak once I've gone quiet** gates messages on idle time — see below. The
+**Quiet for** threshold under it greys out while the gate is off.
+
 ## Messages and configuration
 
 Identical to the macOS build — see the [main README](../README.md) for
@@ -116,11 +120,39 @@ Two keys behave slightly differently here:
 | `screenIndex` | `0` is your **primary** display, `1` the next, and so on. `-1` follows the focused window. Windows enumerates monitors in device order, so the list is reordered to put the primary first — matching what the settings picker shows |
 | `margin` | In device-independent pixels, not macOS points. Same numbers, same result at 100% scaling; scales automatically on high-DPI displays |
 
-And one key is Windows-only:
+And three keys are Windows-only:
 
 | Key | Default | What it does |
 |---|---|---|
 | `theme` | `"auto"` | Speech-bubble colors: `auto` follows your Windows light/dark setting, `dark` and `light` pin it |
+| `idleOnly` | `false` | Only speak once you've gone quiet. Off by default — the robot behaves exactly as it always did |
+| `idleSeconds` | `120` | How long you must be quiet first. Clamped to 5 seconds minimum |
+
+## Only when you're idle
+
+Off by default. Turn it on in the settings window, from the tray menu, or with
+`"idleOnly": true`, and the robot waits for a lull instead of talking over you:
+
+```json
+{ "idleOnly": true, "idleSeconds": 120 }
+```
+
+Any keyboard press, mouse move, click, or wheel/trackpad scroll counts as
+activity and resets the clock. When a scheduled message comes due while you're
+still going, it's **held**, not dropped — it lands the moment you go quiet, and
+the interval re-spaces from there so you don't get two in a row.
+
+Anything you ask for **by hand** ignores the gate entirely: **Say something now**,
+double-clicking the tray icon, **Show a message now**, **Reload config &
+messages**, and switching the robot back on. Only the timer is gated.
+
+Two things it can't see, both inherent to `GetLastInputInfo`:
+
+- **Reading counts as idle.** Watching a video or reading a long page looks
+  exactly like an empty chair. For a bot whose whole job is catching you
+  slacking, that's arguably correct.
+- **A locked workstation reads as active,** so the robot stays quiet rather than
+  performing to a lock screen.
 
 ## What's different from the Mac version
 
@@ -143,8 +175,14 @@ Everything user-facing is the same. Under the hood:
 ## Debugging
 
 Set `GRINDBOT_DEBUG=1` before launching and GrindBot writes a `grindbot.log`
-next to the exe: which config it loaded, how many messages it found, and every
-line it says.
+next to the exe: which config it loaded, how many messages it found, every line
+it says, and — with the idle gate on — each message it held and why.
+
+```
+held - idle 6.9s of 120s
+released - idle 120.4s
+say 'Lock in bro or your family dies' for 5.0s
+```
 
 ```powershell
 $env:GRINDBOT_DEBUG = "1"; .\dist\GrindBot.exe
@@ -160,7 +198,7 @@ $env:GRINDBOT_DEBUG = "1"; .\dist\GrindBot.exe
 | `src\Robot.cs` | The robot and the five faces, drawn as WPF shapes |
 | `src\SettingsWindow.cs` | The settings surface |
 | `src\TrayIcon.cs` | The drawn tray icon |
-| `src\Native.cs` | Win32 interop: click-through, placement, theme, run-at-login |
+| `src\Native.cs` | Win32 interop: click-through, placement, theme, idle time, run-at-login |
 
 Adding a face is the same two edits as on macOS: a `case` in `FaceVisual` and a
 member on the `Face` enum.

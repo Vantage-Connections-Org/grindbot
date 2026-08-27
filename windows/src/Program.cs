@@ -22,8 +22,11 @@ public sealed class Program : System.Windows.Application
     private WinForms.NotifyIcon _tray = null!;
     private WinForms.ToolStripMenuItem _pauseItem = null!;
     private readonly List<WinForms.ToolStripMenuItem> _faceItems = new();
+    private WinForms.ToolStripMenuItem _idleItem = null!;
     private DispatcherTimer _timer = null!;
+    private DispatcherTimer _idlePoll = null!;
     private DispatcherTimer _saveDebounce = null!;
+    private bool _pending;          // a scheduled message is waiting for you to go quiet
     private SettingsWindow? _settingsWindow;
     private Config? _applied;
     private bool _paused;
@@ -74,6 +77,7 @@ public sealed class Program : System.Windows.Application
         _applied = _settings.Cfg.Clone();
         ObserveSettings();
         StartTimer();
+        SyncIdlePoll(_settings.Cfg);
 
         SystemEvents.DisplaySettingsChanged += (_, _) =>
             Dispatcher.BeginInvoke(new Action(() => _popup.Reposition()), DispatcherPriority.Background);
@@ -88,7 +92,7 @@ public sealed class Program : System.Windows.Application
         kickoff.Tick += (_, _) =>
         {
             kickoff.Stop();
-            if (!_paused) Next();
+            if (!_paused) Scheduled();
         };
         kickoff.Start();
     }
@@ -140,6 +144,11 @@ public sealed class Program : System.Windows.Application
         if (old.accent != cfg.accent || old.shell != cfg.shell)
             RefreshTray(cfg);
 
+        if (old.idleOnly != cfg.idleOnly || old.idleSeconds != cfg.idleSeconds)
+            SyncIdlePoll(cfg);
+
+        _idleItem.Checked = cfg.idleOnly;
+
         foreach (var item in _faceItems)
             item.Checked = (string?)item.Tag == cfg.face.ToString();
 
@@ -172,6 +181,12 @@ public sealed class Program : System.Windows.Application
             _faceItems.Add(item);
         }
         menu.Items.Add(faceRoot);
+
+        _idleItem = Item("Only when I'm idle", (_, _) =>
+            _settings.Mutate(c => c.idleOnly = !c.idleOnly));
+        _idleItem.Checked = _settings.Cfg.idleOnly;
+        _idleItem.ToolTipText = "Hold messages until you've stopped typing, clicking and scrolling";
+        menu.Items.Add(_idleItem);
 
         menu.Items.Add(new WinForms.ToolStripSeparator());
         var startup = new WinForms.ToolStripMenuItem("Start with Windows") { Checked = RunAtLogin.Enabled };
@@ -236,8 +251,48 @@ public sealed class Program : System.Windows.Application
         cfg ??= _settings.Cfg;
         _timer?.Stop();
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(Math.Max(1, cfg.intervalSeconds)) };
-        _timer.Tick += (_, _) => Next();
+        _timer.Tick += (_, _) => Scheduled();
         _timer.Start();
+    }
+
+    /// A message the timer asked for. Held back while you're still working, so
+    /// the robot interrupts a lull rather than a sentence. Anything you ask for
+    /// by hand — the menu, the settings button, unpausing — skips this.
+    private void Scheduled()
+    {
+        if (Gated())
+        {
+            Log.Write($"held — idle {Idle.Seconds():0.0}s of {_settings.Cfg.idleSeconds:0}s");
+            _pending = true;
+            return;
+        }
+        Next();
+    }
+
+    private bool Gated()
+    {
+        var cfg = _settings.Cfg;
+        return cfg.idleOnly && Idle.Seconds() < cfg.idleSeconds;
+    }
+
+    /// Only runs while the gate is on. The moment you go quiet, the held
+    /// message lands, and the interval re-spaces from there rather than
+    /// firing again a second later.
+    private void SyncIdlePoll(Config cfg)
+    {
+        _idlePoll?.Stop();
+        if (!cfg.idleOnly) { _pending = false; return; }
+
+        _idlePoll = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _idlePoll.Tick += (_, _) =>
+        {
+            if (!_pending || _paused || Gated()) return;
+            Log.Write($"released — idle {Idle.Seconds():0.0}s");
+            _pending = false;
+            StartTimer();
+            Next();
+        };
+        _idlePoll.Start();
     }
 
     private void Next()
@@ -262,6 +317,7 @@ public sealed class Program : System.Windows.Application
         if (_paused)
         {
             _timer?.Stop();
+            _pending = false;
             _popup.HideNow();
         }
         else

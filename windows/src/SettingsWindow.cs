@@ -210,6 +210,31 @@ public sealed class SettingsWindow : Window
 
         body.Children.Add(_timingRows);
 
+        // Idle gate. The threshold reads as dead weight when the gate is off, so
+        // it greys out rather than vanishing — the number is still worth seeing.
+        var idle = new CheckBox
+        {
+            Content = "Only speak once I've gone quiet",
+            Foreground = Fg.Brush(),
+            Margin = new Thickness(0, 10, 0, 0),
+            ToolTip = "No typing, clicking or scrolling for the time below",
+        };
+        idle.Checked += (_, _) => Edit(c => c.idleOnly = true);
+        idle.Unchecked += (_, _) => Edit(c => c.idleOnly = false);
+        body.Children.Add(idle);
+
+        var idleRow = SliderRow("Quiet for", 10, 600, 5,
+            () => Cfg.idleSeconds,
+            v => Edit(c => c.idleSeconds = v),
+            HumanDuration);
+        body.Children.Add(idleRow);
+
+        _sync.Add(() =>
+        {
+            idle.IsChecked = Cfg.idleOnly;
+            idleRow.IsEnabled = Cfg.idleOnly;
+        });
+
         body.Children.Add(SliderRow("Typing speed", 0, 0.1, 0.002,
             get: () => Cfg.typeSpeed,
             set: v => Edit(c => c.typeSpeed = v),

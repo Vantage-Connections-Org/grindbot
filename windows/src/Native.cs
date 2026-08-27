@@ -77,6 +77,38 @@ internal static class Native
     }
 }
 
+/// How long since the user last touched anything. GetLastInputInfo covers the
+/// whole session: key presses, mouse moves and clicks, and wheel/trackpad
+/// scrolling all reset it. It cannot see passive activity — reading a page or
+/// watching a video counts as idle, which for a nag bot is the point.
+internal static class Idle
+{
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LASTINPUTINFO
+    {
+        public uint cbSize;
+        public uint dwTime;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+
+    [DllImport("kernel32.dll")]
+    private static extern uint GetTickCount();
+
+    public static double Seconds()
+    {
+        var info = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf<LASTINPUTINFO>() };
+        // A locked workstation or a secure desktop makes this fail; treat that
+        // as "not idle" so the robot stays quiet rather than talking to nobody.
+        if (!GetLastInputInfo(ref info)) return 0;
+
+        // Both are 32-bit tick counts that wrap every ~49.7 days. Unsigned
+        // subtraction stays correct across the wrap; signed would not.
+        return unchecked(GetTickCount() - info.dwTime) / 1000.0;
+    }
+}
+
 /// Run at login. Windows has no login-items UI equivalent to macOS's, so the
 /// tray menu owns it: one HKCU Run value, removable from the same menu.
 internal static class RunAtLogin
