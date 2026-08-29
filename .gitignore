@@ -4,3 +4,9 @@ GrindBot.app/
 
 # personal settings — seeded from config.default.json on first build
 config.json
+
+# Windows build output
+windows/bin/
+windows/obj/
+windows/dist/
+windows/grindbot.log

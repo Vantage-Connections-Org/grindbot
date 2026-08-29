@@ -163,3 +163,10 @@ every tick of a slider would reset the countdown each time.
 - **The window is click-through** (`ignoresMouseEvents = true`). If you want
   the robot to respond to clicks, turn that off — but then it can intercept
   clicks meant for whatever is underneath.
+
+## Windows
+
+The Windows port in `windows/` mirrors this layout file for file — `Config.swift`
+is `src/Config.cs`, `RobotView.swift` is `src/Robot.cs`, and so on. Adding a face
+is the same two edits on both sides. See
+[windows/README.md](windows/README.md#code-layout) for the map.
