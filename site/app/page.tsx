@@ -268,10 +268,9 @@ export default async function Home() {
               </div>
               <p className="mt-6 max-w-[62ch] text-sm text-muted">
                 <code className="font-mono">face</code> takes one of {FACES.map((f) => f.name).join(", ")}. There are
-                more keys than these: dwell timing, <code className="font-mono">margin</code>,{" "}
-                <code className="font-mono">maxBubbleWidth</code>, and Windows-only ones like{" "}
-                <code className="font-mono">theme</code>, <code className="font-mono">idleOnly</code> and{" "}
-                <code className="font-mono">allMessageFiles</code>. The full table is in the{" "}
+                a few more keys than these: the dwell timing values,{" "}
+                <code className="font-mono">margin</code> and <code className="font-mono">maxBubbleWidth</code>. Every
+                key works on both platforms. The full table is in the{" "}
                 <a href={`${REPO_URL}#configuration`} className="underline underline-offset-4 hover:text-text">
                   README
                 </a>
