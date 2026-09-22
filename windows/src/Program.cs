@@ -122,9 +122,10 @@ public sealed class Program : System.Windows.Application
             _settingsWindow?.ShowSaveError(_settings.SaveError);
         };
 
-        _settings.Changed += cfg =>
+        _settings.Changed += (cfg, fromDisk) =>
         {
             Apply(cfg);
+            if (fromDisk) return;   // it IS the file; writing it back only strips the user's comments
             _saveDebounce.Stop();
             _saveDebounce.Start();
         };
@@ -344,7 +345,7 @@ public sealed class Program : System.Windows.Application
 
     private void Reload()
     {
-        _settings.Cfg = Config.Load();       // fires Apply through Changed
+        _settings.Adopt(Config.Load());      // fires Apply, but does not save it back
         // The point of Reload is that the files changed on disk, so the cached
         // message count in the settings window has to be re-read.
         _settingsWindow?.InvalidateDeckDescription();

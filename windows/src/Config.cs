@@ -228,14 +228,25 @@ public sealed class Settings
     public Config Cfg
     {
         get => _cfg;
-        set { _cfg = value; Changed?.Invoke(value); }
+        set { _cfg = value; Changed?.Invoke(value, false); }
     }
     public string? SaveError;
 
-    /// Fired for every mutation, including in-place ones via Mutate.
-    public event Action<Config>? Changed;
+    /// Fired for every mutation, including in-place ones via Mutate. The flag is
+    /// true when the value was just read from the file, so a listener knows not
+    /// to write it straight back.
+    public event Action<Config, bool>? Changed;
 
     public Settings(Config cfg) { _cfg = cfg; }
+
+    /// Publish a config that came from disk. Load accepts comments and trailing
+    /// commas but Save re-emits plain JSON, so saving this back would quietly
+    /// delete the notes out of a hand-edited config.json.
+    public void Adopt(Config cfg)
+    {
+        _cfg = cfg;
+        Changed?.Invoke(cfg, true);
+    }
 
     /// Edit a copy, then publish it — mirrors SwiftUI's value-type @Published.
     public void Mutate(Action<Config> edit)
@@ -345,12 +356,35 @@ public static class Paths
 
     public static string? NextToApp(string name)
     {
+        if (!IsSafeName(name)) return null;
         foreach (var root in Roots())
         {
             var p = Path.Combine(root, Relative(name));
+            if (!StaysInside(root, p)) continue;
             if (File.Exists(p)) return p;
         }
         return null;
+    }
+
+    /// messagesFile comes out of a hand-edited config.json and ends up both read
+    /// into the bubble and handed to Process.Start by "Edit messages…". Keep it
+    /// to a .txt under one of our own roots: no absolute paths, no ..\ escapes.
+    private static bool IsSafeName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return false;
+        // .json is here for our own config.json, which goes through this too.
+        if (!name.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+            && !name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)) return false;
+        if (Path.IsPathRooted(name) || name.Contains(':')) return false;
+        return name.Split('/', '\\').All(part => part != "..");
+    }
+
+    private static bool StaysInside(string root, string candidate)
+    {
+        var full = Path.GetFullPath(candidate);
+        var baseDir = Path.GetFullPath(root);
+        if (!baseDir.EndsWith(Path.DirectorySeparatorChar)) baseDir += Path.DirectorySeparatorChar;
+        return full.StartsWith(baseDir, StringComparison.OrdinalIgnoreCase);
     }
 
     /// Where a save should land: back where the file was found, or DataDir if
