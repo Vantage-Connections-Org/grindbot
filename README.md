@@ -49,6 +49,8 @@ Everything is under the 🤖 icon:
 | Say something now | Fire a message immediately — useful for hitting a cue while recording |
 | Turn off / Turn on | Stop the popups without quitting. Icon becomes 💤. Turning it back on fires one right away |
 | Face | Switch robot face. Saved to `config.json`, like every other setting |
+| Only when I'm idle | Hold messages until you have stopped typing for `idleSeconds` |
+| Start at login | Register the app to launch when you log in |
 | Reload config & messages | Re-read both files without rebuilding |
 | Edit messages… / Edit config.json… | Open the files in your default editor |
 | Quit | Shut it down |
@@ -133,7 +135,11 @@ a broken file degrades rather than crashes.
 | `visor` | `"#212121"` | The dark face panel behind the eyes |
 | `typeSpeed` | `0.022` | Seconds per character for the typewriter effect. `0` shows the whole message at once |
 | `shuffle` | `false` | Random order instead of in-order |
-| `messagesFile` | `"messages.txt"` | Path to the message file, relative to the app |
+| `messagesFile` | `"messages.txt"` | Path to the message file, relative to the app. An array draws from several: `["packs/habits.txt", "packs/hustle.txt"]` |
+| `allMessageFiles` | `false` | Draw from every message file found, ignoring `messagesFile` |
+| `theme` | `"auto"` | Speech-bubble colors: `auto` follows the system light/dark setting, `dark` and `light` pin it |
+| `idleOnly` | `false` | Hold messages until you have stopped typing |
+| `idleSeconds` | `120` | How long you must be quiet first. Clamped to 5 seconds minimum |
 | `margin` | `22` | Padding inside the popup, in points, scaled by `scale / 1.5` — so it is the gap you see at the default scale, and proportionally larger or smaller at others |
 | `maxBubbleWidth` | `280` | Bubble width before wrapping, before `scale` is applied |
 
@@ -175,10 +181,8 @@ cd windows
 ```
 
 Settings live in `%APPDATA%\GrindBot` rather than next to the app, since the
-Windows build folder is disposable. It adds one config key of its own, `theme`
-(`auto` / `dark` / `light`), for the speech bubble, since Windows has no
-equivalent of macOS's live-blurred `.regularMaterial`. See [windows/README.md](windows/README.md) for the details
-and the handful of platform differences.
+Windows build folder is disposable. See [windows/README.md](windows/README.md)
+for the details and the handful of platform differences.
 
 ## Customizing
 

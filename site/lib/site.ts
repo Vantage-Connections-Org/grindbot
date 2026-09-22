@@ -55,7 +55,11 @@ export const CONFIG_KEYS = [
   { key: "visor", value: '"#212121"', note: "The dark face panel behind the eyes." },
   { key: "typeSpeed", value: "0.022", note: "Seconds per character for the typewriter effect. 0 shows the whole message at once." },
   { key: "shuffle", value: "false", note: "Random order instead of in-order. Plays the whole list before reshuffling." },
-  { key: "messagesFile", value: '"messages.txt"', note: "Path to the message file, relative to the app." },
+  { key: "messagesFile", value: '"messages.txt"', note: "Path to the message file, relative to the app. An array draws from several at once." },
+  { key: "allMessageFiles", value: "false", note: "Draw from every message file found, ignoring messagesFile." },
+  { key: "theme", value: '"auto"', note: "Bubble colours: auto follows the system, dark and light pin it." },
+  { key: "idleOnly", value: "false", note: "Hold messages until you have stopped typing." },
+  { key: "idleSeconds", value: "120", note: "How long you must be quiet first. Minimum 5." },
 ] as const;
 
 /** Live star count from the GitHub API (cached for an hour). Null if the API is unreachable. */

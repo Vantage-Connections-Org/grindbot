@@ -124,16 +124,16 @@ Two keys behave slightly differently here:
 | `screenIndex` | `0` is your **primary** display, `1` the next, and so on. `-1` follows the focused window. Windows enumerates monitors in device order, so the list is reordered to put the primary first — matching what the settings picker shows |
 | `margin` | In device-independent pixels, not macOS points. Same numbers, same result at 100% scaling; scales automatically on high-DPI displays. Like macOS it is padding inside the popup, multiplied by `scale / 1.5` |
 
-And three keys are Windows-only:
+Four more keys, which used to be Windows-only and now work on both platforms:
 
 | Key | Default | What it does |
 |---|---|---|
-| `theme` | `"auto"` | Speech-bubble colors: `auto` follows your Windows light/dark setting, `dark` and `light` pin it |
+| `theme` | `"auto"` | Speech-bubble colors: `auto` follows the system light/dark setting, `dark` and `light` pin it |
 | `idleOnly` | `false` | Only speak once you've gone quiet. Off by default — the robot behaves exactly as it always did |
 | `idleSeconds` | `120` | How long you must be quiet first. Clamped to 5 seconds minimum |
 | `allMessageFiles` | `false` | Draw from every message file found, not just one |
 
-`messagesFile` also accepts an array on Windows, to draw from a chosen few:
+`messagesFile` also accepts an array, to draw from a chosen few:
 
 ```json
 { "messagesFile": ["packs/habits.txt", "packs/obituary.txt"] }
