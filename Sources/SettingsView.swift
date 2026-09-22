@@ -254,7 +254,9 @@ struct SettingsView: View {
         // Every root the loader searches, so a pack you drop in Application
         // Support shows up next to the shipped ones.
         var packs: [String] = []
-        for root in searchRoots() {
+        var roots = searchRoots()
+        if let resources = Bundle.main.resourceURL { roots.append(resources) } // the bundled copies
+        for root in roots {
             let dir = root.appendingPathComponent("packs")
             guard let names = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { continue }
             packs += names.filter { $0.hasSuffix(".txt") }.map { "packs/\($0)" }

@@ -205,6 +205,12 @@ func fileNextToApp(_ name: String) -> URL? {
         let candidate = root.appendingPathComponent(name)
         if FileManager.default.fileExists(atPath: candidate.path) { return candidate }
     }
+    // Then the copy inside the bundle. Done by path, not by resource name, so a
+    // nested "packs/hustle.txt" resolves — forResource: would not find it.
+    if let resources = Bundle.main.resourceURL {
+        let bundled = resources.appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: bundled.path) { return bundled }
+    }
     let stem = (name as NSString).deletingPathExtension
     let ext = (name as NSString).pathExtension
     return Bundle.main.url(forResource: stem, withExtension: ext)

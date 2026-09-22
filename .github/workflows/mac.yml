@@ -39,6 +39,12 @@ jobs:
           test -f GrindBot.app/Contents/Resources/config.json
           # LSUIElement is what keeps it out of the Dock; a regression here is user-visible.
           /usr/libexec/PlistBuddy -c "Print :LSUIElement" GrindBot.app/Contents/Info.plist | grep -qx true
+          # The runner is arm64; without both slices Intel Macs can't launch it.
+          lipo -info GrindBot.app/Contents/MacOS/GrindBot | tee /dev/stderr | grep -q "x86_64 arm64\|arm64 x86_64"
+          # All five packs must be inside the bundle, so a lone .app still works.
+          test "$(ls GrindBot.app/Contents/Resources/packs/*.txt | wc -l)" -eq "$(ls packs/*.txt | wc -l)"
+          # The shipped config must be the defaults, not someone's working copy.
+          diff -q config.default.json GrindBot.app/Contents/Resources/config.json
           codesign --verify --verbose GrindBot.app
 
       - name: Packs travel with the app
