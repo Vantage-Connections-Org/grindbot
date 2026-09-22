@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import ServiceManagement
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -9,6 +10,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var window: NSWindow!
     private var statusItem: NSStatusItem!
+    private var loginItem: NSMenuItem?
     private var pauseItem: NSMenuItem!
     private var faceItems: [NSMenuItem] = []
     private var timer: Timer?
@@ -128,6 +130,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(faceRoot)
 
         menu.addItem(.separator())
+        let login = NSMenuItem(title: "Start at login", action: #selector(toggleLoginItem), keyEquivalent: "")
+        login.target = self
+        login.state = LoginItem.enabled ? .on : .off
+        loginItem = login
+        menu.addItem(login)
+
+        menu.addItem(.separator())
         for item in [
             NSMenuItem(title: "Reload config & messages", action: #selector(reload), keyEquivalent: "r"),
             NSMenuItem(title: "Edit messages…", action: #selector(editMessages), keyEquivalent: ""),
@@ -244,5 +253,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow?.makeKeyAndOrderFront(nil)
     }
 
+    @objc private func toggleLoginItem() {
+        let error = LoginItem.set(!LoginItem.enabled)
+        loginItem?.state = LoginItem.enabled ? .on : .off
+        guard let error else { return }
+        let alert = NSAlert()
+        alert.messageText = "Couldn't change the login item"
+        alert.informativeText = error
+        alert.runModal()
+    }
+
     @objc private func quitApp() { NSApp.terminate(nil) }
+}
+
+/// Run at login. The Windows build has had this from the start via an HKCU Run
+/// value; SMAppService is the macOS 13+ equivalent, and it only works for an app
+/// registered from a real bundle — running the binary directly will report an
+/// error rather than silently doing nothing.
+enum LoginItem {
+    static var enabled: Bool { SMAppService.mainApp.status == .enabled }
+
+    /// Returns nil on success, or a message to show the user.
+    static func set(_ on: Bool) -> String? {
+        do {
+            if on {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
+            }
+            return nil
+        } catch {
+            return error.localizedDescription
+        }
+    }
 }
