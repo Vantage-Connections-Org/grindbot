@@ -1,0 +1,22 @@
+# Line endings are not cosmetic here. Every shipped pack was CRLF, and the macOS
+# parser trimmed only spaces, so each message carried a trailing carriage return
+# and a blank line became an empty speech bubble. The parser handles both now,
+# but the files themselves should stop drifting.
+
+* text=auto eol=lf
+
+# Message packs are read line by line by both apps: keep them LF everywhere.
+*.txt text eol=lf
+
+# PowerShell is happier with CRLF, and these are only ever run on Windows.
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Never touch these.
+*.png binary
+*.webp binary
+*.ico binary
+*.icns binary
+*.dmg binary
+*.zip binary
