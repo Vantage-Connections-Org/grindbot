@@ -495,13 +495,28 @@ public sealed class SettingsWindow : Window
 
     /// Reads the selection off disk so the count reflects what will actually
     /// play, deduped, rather than the sum of the files.
+    private string _deckKey = "";
+    private string _deckText = "";
+
     private string DescribeDeck()
     {
+        // SyncFromConfig runs on every config mutation, so this is hit once per
+        // slider tick while dragging. Only touch the disk when the selection
+        // itself changed, not when a colour moved.
+        var key = Cfg.MessageFilesKey();
+        if (key == _deckKey && _deckText.Length > 0) return _deckText;
+
         var deck = new MessageDeck();
         deck.Reload(Cfg);
         var n = Cfg.MessageFiles().Count;
-        return $"{deck.Count} messages from {n} file{(n == 1 ? "" : "s")}";
+        _deckKey = key;
+        _deckText = $"{deck.Count} messages from {n} file{(n == 1 ? "" : "s")}";
+        return _deckText;
     }
+
+    /// Called when the files on disk may have changed underneath us (Reload
+    /// messages), so the next describe actually re-reads.
+    public void InvalidateDeckDescription() => _deckKey = "";
 
     private UIElement BuildFooter()
     {

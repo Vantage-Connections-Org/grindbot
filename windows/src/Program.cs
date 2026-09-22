@@ -59,11 +59,24 @@ public sealed class Program : System.Windows.Application
     {
         base.OnStartup(e);
 
+        // A recurring render or layout fault fires this on every frame. Showing a
+        // modal stack trace each time buries the user in dialogs they can't
+        // escape, and DebugType=none means the trace has no line numbers anyway.
+        // Tell them once, in words, then carry on and keep logging.
+        bool reported = false;
         DispatcherUnhandledException += (_, args) =>
         {
-            WinForms.MessageBox.Show(args.Exception.ToString(), "GrindBot crashed",
-                WinForms.MessageBoxButtons.OK, WinForms.MessageBoxIcon.Error);
             Log.Write("UNHANDLED " + args.Exception);
+            if (!reported)
+            {
+                reported = true;
+                WinForms.MessageBox.Show(
+                    "GrindBot hit an error and skipped that popup.\n\n" +
+                    args.Exception.GetType().Name + ": " + args.Exception.Message +
+                    "\n\nIt will keep running. To capture details, set GRINDBOT_DEBUG=1 " +
+                    "and restart; the log lands next to GrindBot.exe as grindbot.log.",
+                    "GrindBot", WinForms.MessageBoxButtons.OK, WinForms.MessageBoxIcon.Warning);
+            }
             args.Handled = true;
         };
 
@@ -332,6 +345,9 @@ public sealed class Program : System.Windows.Application
     private void Reload()
     {
         _settings.Cfg = Config.Load();       // fires Apply through Changed
+        // The point of Reload is that the files changed on disk, so the cached
+        // message count in the settings window has to be re-read.
+        _settingsWindow?.InvalidateDeckDescription();
         _deck.Reload(_settings.Cfg);
         _popup.Rebuild(_settings.Cfg);
         StartTimer();

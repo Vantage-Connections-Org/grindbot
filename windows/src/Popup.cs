@@ -242,6 +242,9 @@ public sealed class PopupWindow : Window
         Width = BaseWidth * s;
         Height = BaseHeight * s;
 
+        // Dragging a colour slider rebuilds on every tick; without this each
+        // discarded robot leaves its forever-running bob animation behind.
+        _robot?.StopBob();
         _robot = new RobotVisual(cfg.RobotStyle) { VerticalAlignment = VerticalAlignment.Bottom };
 
         _label = new TextBlock

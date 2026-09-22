@@ -265,6 +265,10 @@ public sealed class RobotVisual : Grid
 
     public void SetBlink(bool blink) => _face.SetBlink(blink);
 
+    /// A Forever animation keeps its clock alive in WPF's timing tree even after
+    /// the visual is dropped, so a replaced robot has to be told to stop.
+    public void StopBob() => _bob.BeginAnimation(TranslateTransform.YProperty, null);
+
     /// The idle float: +3 to -3 and back, forever.
     private void StartBob(double s)
     {
