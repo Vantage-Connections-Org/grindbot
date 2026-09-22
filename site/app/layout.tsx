@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
 import { DESCRIPTION, FAQ, LICENSE_URL, NAME, REPO_URL, SITE_URL, TITLE } from "@/lib/site";
 import "./globals.css";
 
@@ -69,7 +68,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable} antialiased`}>
       <body className="min-h-[100dvh] font-sans">
         {children}
-        <Analytics />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </body>
     </html>
