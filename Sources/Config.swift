@@ -56,6 +56,11 @@ struct Config {
     var typeSpeed: Double = 0.022           // 0 disables the typewriter effect
     var shuffle: Bool = false
     var messagesFile: String = "messages.txt"
+    /// "messagesFile" given as an array. Windows has always honoured this; macOS
+    /// used to read the key as a string, see nothing usable, and fall back.
+    var messageFileList: [String]? = nil
+    /// Draw from every message file we can find rather than a fixed selection.
+    var allMessageFiles = false
     var margin: Double = 22                 // gap from the screen edge, in points
     var maxBubbleWidth: Double = 280        // before scale is applied
 
@@ -64,6 +69,18 @@ struct Config {
     var robotStyle: RobotStyle {
         RobotStyle(accent: Color(hex: accent), shell: Color(hex: shell),
                    visor: Color(hex: visor), scale: scale, face: face)
+    }
+
+    /// Every file the deck should draw from, in order.
+    func messageFiles() -> [String] {
+        if allMessageFiles { return SettingsView.discoverMessageFiles() }
+        if let list = messageFileList, !list.isEmpty { return list }
+        return [messagesFile]
+    }
+
+    /// Cheap comparison so a reload only happens when the selection really moved.
+    func messageFilesKey() -> String {
+        allMessageFiles ? "*" : messageFiles().joined(separator: "|")
     }
 
     /// Seconds the bubble stays up for a given message.
@@ -103,7 +120,18 @@ extension Config {
         if let s = obj["accent"] as? String { c.accent = s }
         if let s = obj["shell"] as? String { c.shell = s }
         if let s = obj["visor"] as? String { c.visor = s }
-        if let s = obj["messagesFile"] as? String, !s.isEmpty { c.messagesFile = s }
+        c.allMessageFiles = (obj["allMessageFiles"] as? Bool) ?? c.allMessageFiles
+        if let s = obj["messagesFile"] as? String, !s.isEmpty {
+            c.messagesFile = s
+        } else if let list = obj["messagesFile"] as? [String] {
+            let cleaned = list.filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            if !cleaned.isEmpty {
+                c.messageFileList = cleaned
+                // Keep the single key valid too, so a config written by either
+                // platform still means something to the other.
+                c.messagesFile = cleaned[0]
+            }
+        }
         if let s = obj["position"] as? String, let p = Corner(rawValue: s) { c.position = p }
         if let s = obj["face"] as? String, let f = Face(rawValue: s) { c.face = f }
         return c
@@ -118,8 +146,12 @@ extension Config {
             "dwellPerCharacter": dwellPerCharacter, "dwellMax": dwellMax,
             "scale": scale, "position": position.rawValue, "screenIndex": screenIndex,
             "face": face.rawValue, "accent": accent, "shell": shell, "visor": visor,
-            "typeSpeed": typeSpeed, "shuffle": shuffle, "messagesFile": messagesFile,
+            "typeSpeed": typeSpeed, "shuffle": shuffle,
             "margin": margin, "maxBubbleWidth": maxBubbleWidth,
+            "allMessageFiles": allMessageFiles,
+            // An array selection has to survive the save, or the 400ms autosave
+            // would quietly collapse a multi-file config back to one file.
+            "messagesFile": messageFileList ?? messagesFile,
         ]
     }
 

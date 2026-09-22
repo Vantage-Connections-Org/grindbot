@@ -63,7 +63,12 @@ final class MessageDeck {
 
     func reload(_ cfg: Config) {
         shuffle = cfg.shuffle
-        messages = MessageDeck.read(cfg.messagesFile)
+        // Several files can be selected, and messages.txt ships identical to
+        // packs/classic.txt, so dedupe with the first occurrence winning.
+        var seen = Set<String>()
+        messages = cfg.messageFiles()
+            .flatMap { MessageDeck.read($0) }
+            .filter { seen.insert($0).inserted }
         queue = []
     }
 

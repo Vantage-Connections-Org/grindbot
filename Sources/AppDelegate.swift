@@ -83,7 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if old?.scale != cfg.scale || old?.position != cfg.position || old?.screenIndex != cfg.screenIndex {
             reposition(cfg)
         }
-        if old?.messagesFile != cfg.messagesFile || old?.shuffle != cfg.shuffle {
+        if old?.messageFilesKey() != cfg.messageFilesKey() || old?.shuffle != cfg.shuffle {
             deck.reload(cfg)
         }
         // Only on a real change — otherwise every slider tick restarts the countdown.
