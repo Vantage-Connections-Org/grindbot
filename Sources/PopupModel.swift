@@ -77,8 +77,10 @@ final class MessageDeck {
     private static func read(_ name: String) -> [String] {
         guard let url = fileNextToApp(name),
               let raw = try? String(contentsOf: url, encoding: .utf8) else { return [] }
-        return raw.split(separator: "\n")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
+        // Split on any newline and trim CR too: the shipped packs are CRLF, and
+        // trimming only .whitespaces leaves a stray \r on every single message.
+        return raw.split(whereSeparator: \.isNewline)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty && !$0.hasPrefix("#") }
     }
 }

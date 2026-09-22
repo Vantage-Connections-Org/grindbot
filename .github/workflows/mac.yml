@@ -41,8 +41,25 @@ jobs:
           /usr/libexec/PlistBuddy -c "Print :LSUIElement" GrindBot.app/Contents/Info.plist | grep -qx true
           codesign --verify --verbose GrindBot.app
 
+      - name: Packs travel with the app
+        run: |
+          set -euo pipefail
+          # Config.swift resolves a message file next to the bundle first, so an
+          # artifact with only GrindBot.app in it has no packs at all: pick
+          # packs/hustle.txt in Settings and every popup says "file is empty".
+          shipped=$(ls packs/*.txt | wc -l | tr -d ' ')
+          test "$shipped" -gt 0
+          mkdir -p stage
+          cp -R GrindBot.app packs stage/
+          cp LICENSE CUSTOMIZING.md stage/
+          staged=$(ls stage/packs/*.txt | wc -l | tr -d ' ')
+          test "$staged" -eq "$shipped"
+          for f in packs/*.txt messages.txt; do
+            grep -qv '^[[:space:]]*$' "$f" || { echo "$f has no messages"; exit 1; }
+          done
+
       - name: Package
-        run: ditto -c -k --keepParent GrindBot.app GrindBot-mac.zip
+        run: ditto -c -k --keepParent stage GrindBot-mac.zip
 
       - uses: actions/upload-artifact@v4
         with:

@@ -69,7 +69,9 @@ struct Config {
     /// Seconds the bubble stays up for a given message.
     func dwell(for text: String) -> Double {
         if dwellMode == "fixed" { return max(0.5, dwellSeconds) }
-        return min(dwellMax, dwellBase + Double(text.count) * dwellPerCharacter)
+        // Floor it: a hand-edited "dwellMax": 0 would otherwise hide the bubble
+        // before the spring animation even lands, which reads as a broken app.
+        return max(0.5, min(dwellMax, dwellBase + Double(text.count) * dwellPerCharacter))
     }
 }
 
@@ -121,12 +123,11 @@ extension Config {
         ]
     }
 
-    /// Writes config.json next to the app. Returns an error string on failure —
-    /// the app bundle can sit somewhere the user can't write to.
+    /// Writes config.json back where it was found, or to Application Support.
+    /// Returns an error string on failure.
     @discardableResult
     func save() -> String? {
-        let url = Bundle.main.bundleURL.deletingLastPathComponent()
-            .appendingPathComponent("config.json")
+        let url = writeDestination("config.json")
         do {
             let data = try JSONSerialization.data(withJSONObject: dictionary,
                                                   options: [.prettyPrinted, .sortedKeys])
@@ -166,14 +167,58 @@ extension Color {
     }
 }
 
-/// Prefers a file sitting next to RobotPopup.app so users can edit config and
-/// messages without opening the bundle; falls back to the bundled copy.
+/// Everything GrindBot writes lives here. The app itself may sit in /Applications,
+/// which the user can't write to — the Windows build has used %APPDATA%\GrindBot
+/// for the same reason.
+let dataDir: URL = {
+    let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
+    let dir = base.appendingPathComponent("GrindBot", isDirectory: true)
+    try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    return dir
+}()
+
+/// First match wins:
+///   1. next to GrindBot.app — portable: drop a config.json in and it takes over
+///   2. ~/Library/Application Support/GrindBot — the normal home
+///   3. the repo root — only when running out of the source tree
+func searchRoots() -> [URL] {
+    let appDir = Bundle.main.bundleURL.deletingLastPathComponent()
+    var roots = [appDir, dataDir]
+    var dir = appDir
+    for _ in 0..<6 {
+        let up = dir.deletingLastPathComponent()
+        if up.path == dir.path { break }
+        dir = up
+        if FileManager.default.fileExists(atPath: dir.appendingPathComponent("config.default.json").path) {
+            roots.append(dir)
+            break
+        }
+    }
+    return roots
+}
+
+/// Prefers a file on disk so users can edit config and messages without opening
+/// the bundle; falls back to the bundled copy.
 func fileNextToApp(_ name: String) -> URL? {
-    let neighbour = Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent(name)
-    if FileManager.default.fileExists(atPath: neighbour.path) { return neighbour }
+    for root in searchRoots() {
+        let candidate = root.appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: candidate.path) { return candidate }
+    }
     let stem = (name as NSString).deletingPathExtension
     let ext = (name as NSString).pathExtension
     return Bundle.main.url(forResource: stem, withExtension: ext)
+}
+
+/// Where a save should land: back where the file was found, or dataDir if it
+/// doesn't exist yet. Never inside the app bundle.
+func writeDestination(_ name: String) -> URL {
+    for root in searchRoots() {
+        let candidate = root.appendingPathComponent(name)
+        if FileManager.default.fileExists(atPath: candidate.path),
+           FileManager.default.isWritableFile(atPath: candidate.path) { return candidate }
+    }
+    return dataDir.appendingPathComponent(name)
 }
 
 extension Color {

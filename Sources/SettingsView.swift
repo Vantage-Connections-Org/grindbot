@@ -251,13 +251,16 @@ struct SettingsView: View {
 
     /// messages.txt plus anything in packs/, so the picker stays in sync with disk.
     static func discoverMessageFiles() -> [String] {
-        var found = ["messages.txt"]
-        let root = Bundle.main.bundleURL.deletingLastPathComponent()
-        let packs = root.appendingPathComponent("packs")
-        if let names = try? FileManager.default.contentsOfDirectory(atPath: packs.path) {
-            found += names.filter { $0.hasSuffix(".txt") }.sorted().map { "packs/\($0)" }
+        // Every root the loader searches, so a pack you drop in Application
+        // Support shows up next to the shipped ones.
+        var packs: [String] = []
+        for root in searchRoots() {
+            let dir = root.appendingPathComponent("packs")
+            guard let names = try? FileManager.default.contentsOfDirectory(atPath: dir.path) else { continue }
+            packs += names.filter { $0.hasSuffix(".txt") }.map { "packs/\($0)" }
         }
-        return found
+        var seen = Set<String>()
+        return ["messages.txt"] + packs.sorted().filter { seen.insert($0).inserted }
     }
 }
 
