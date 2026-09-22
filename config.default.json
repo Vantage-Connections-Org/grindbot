@@ -15,6 +15,10 @@
   "typeSpeed": 0.022,
   "shuffle": false,
   "messagesFile": "messages.txt",
+  "allMessageFiles": false,
+  "theme": "auto",
+  "idleOnly": false,
+  "idleSeconds": 120,
   "margin": 22,
   "maxBubbleWidth": 280
 }

@@ -44,13 +44,13 @@ public sealed class Config
     public double typeSpeed = 0.022;           // 0 disables the typewriter effect
     public bool shuffle = false;
     public string messagesFile = "messages.txt";   // single path; what macOS reads
-    public List<string>? messageFileList;          // Windows: "messagesFile" as an array
-    public bool allMessageFiles = false;           // Windows: draw from every file found
+    public List<string>? messageFileList;          // "messagesFile" given as an array
+    public bool allMessageFiles = false;           // draw from every file found
     public double margin = 22;                 // gap from the screen edge, in DIPs
     public double maxBubbleWidth = 280;        // before scale is applied
-    public string theme = "auto";              // Windows-only: auto | dark | light
-    public bool idleOnly = false;              // Windows-only: hold messages while you're working
-    public double idleSeconds = 120;           // Windows-only: how long you must be idle first
+    public string theme = "auto";              // auto | dark | light
+    public bool idleOnly = false;              // hold messages while you're working
+    public double idleSeconds = 120;           // how long you must be idle first
 
     public Color AccentColor => ColorX.FromHex(accent);
     public RobotStyle RobotStyle =>
@@ -144,9 +144,8 @@ public sealed class Config
         if (Str("messagesFile") is string mf && mf.Length > 0) c.messagesFile = mf;
         else if (obj["messagesFile"] is JsonArray arr)
         {
-            // Array form is a Windows extension. macOS reads this key as a
-            // string, sees nothing usable, and falls back to its default —
-            // which is why messagesFile below is also kept as a valid path.
+            // macOS understands this form too now, but it also reads the
+            // single key, so messagesFile below is kept as a valid path.
             var list = arr.Select(n => n?.GetValue<string>())
                           .Where(v => !string.IsNullOrWhiteSpace(v))
                           .Select(v => v!)
