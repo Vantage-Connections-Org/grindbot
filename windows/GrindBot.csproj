@@ -10,6 +10,7 @@
     <AssemblyName>GrindBot</AssemblyName>
     <RootNamespace>GrindBot</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>GrindBot.ico</ApplicationIcon>
     <StartupObject>GrindBot.Program</StartupObject>
     <!-- No App.xaml: Program.cs owns Main so the whole app is plain C#. -->
     <EnableDefaultApplicationDefinition>false</EnableDefaultApplicationDefinition>

@@ -46,6 +46,8 @@ jobs:
           # The shipped config must be the defaults, not someone's working copy.
           diff -q config.default.json GrindBot.app/Contents/Resources/config.json
           codesign --verify --verbose GrindBot.app
+          # The bundle had no icon at all until the .icns was generated in build.sh.
+          test -s GrindBot.app/Contents/Resources/GrindBot.icns
 
       - name: Packs travel with the app
         run: |

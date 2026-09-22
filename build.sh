@@ -34,6 +34,7 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
   <key>CFBundleDisplayName</key><string>GrindBot</string>
   <key>CFBundleExecutable</key><string>GrindBot</string>
   <key>CFBundleIdentifier</key><string>local.grindbot</string>
+  <key>CFBundleIconFile</key><string>GrindBot</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>1.0</string>
   <key>LSMinimumSystemVersion</key><string>13.0</string>
@@ -43,6 +44,18 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 </dict>
 </plist>
 PLIST
+
+# Icon: iconutil only exists on macOS, so the .icns is built here from the one
+# 1024px source rather than committed as a binary.
+if [ -f brand/icon-1024.png ]; then
+  ICONSET="$(mktemp -d)/GrindBot.iconset"
+  mkdir -p "$ICONSET"
+  for s in 16 32 128 256 512; do
+    sips -z $s $s brand/icon-1024.png --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+    sips -z $((s*2)) $((s*2)) brand/icon-1024.png --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+  done
+  iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/GrindBot.icns"
+fi
 
 codesign --force --deep --sign - "$APP" 2>/dev/null || true
 echo "Built $(pwd)/$APP"
