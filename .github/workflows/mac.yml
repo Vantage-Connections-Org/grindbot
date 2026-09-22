@@ -1,0 +1,51 @@
+name: mac
+
+# Catches a broken macOS build before anyone tries to run build.sh.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Sources/**"
+      - "build.sh"
+      - "config.default.json"
+      - "messages.txt"
+      - ".github/workflows/mac.yml"
+  pull_request:
+    paths:
+      - "Sources/**"
+      - "build.sh"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: swift --version
+
+      - name: Build GrindBot.app
+        run: ./build.sh
+
+      - name: Verify the bundle
+        run: |
+          set -euo pipefail
+          test -x GrindBot.app/Contents/MacOS/GrindBot
+          test -f GrindBot.app/Contents/Resources/messages.txt
+          test -f GrindBot.app/Contents/Resources/config.json
+          # LSUIElement is what keeps it out of the Dock; a regression here is user-visible.
+          /usr/libexec/PlistBuddy -c "Print :LSUIElement" GrindBot.app/Contents/Info.plist | grep -qx true
+          codesign --verify --verbose GrindBot.app
+
+      - name: Package
+        run: ditto -c -k --keepParent GrindBot.app GrindBot-mac.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GrindBot-mac
+          path: GrindBot-mac.zip
+          if-no-files-found: error

@@ -1,0 +1,60 @@
+name: windows
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "windows/**"
+      - "config.default.json"
+      - "messages.txt"
+      - "packs/**"
+      - ".github/workflows/windows.yml"
+  pull_request:
+    paths:
+      - "windows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build
+        run: dotnet build windows/GrindBot.csproj -c Release --nologo
+
+      - name: Publish (self-contained, the download people actually get)
+        shell: pwsh
+        run: ./windows/build.ps1 -SelfContained
+
+      - name: Verify the build output
+        shell: pwsh
+        run: |
+          $dist = "windows/dist"
+          if (-not (Test-Path "$dist/GrindBot.exe")) { throw "GrindBot.exe missing" }
+          # The packs are shipped content; a missing one means an empty picker.
+          $shipped = (Get-ChildItem packs/*.txt).Count
+          $copied  = (Get-ChildItem "$dist/packs/*.txt").Count
+          if ($copied -ne $shipped) { throw "packs: shipped $shipped, copied $copied" }
+          # Every shipped message file must be non-empty and UTF-8 readable.
+          Get-ChildItem packs/*.txt, messages.txt | ForEach-Object {
+            $lines = @(Get-Content $_.FullName | Where-Object { $_.Trim() -ne "" })
+            if ($lines.Count -eq 0) { throw "$($_.Name) has no messages" }
+          }
+          Get-Content config.default.json -Raw | ConvertFrom-Json | Out-Null
+
+      - name: Package
+        shell: pwsh
+        run: Compress-Archive -Path windows/dist/* -DestinationPath GrindBot-windows-x64.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GrindBot-windows-x64
+          path: GrindBot-windows-x64.zip
+          if-no-files-found: error
