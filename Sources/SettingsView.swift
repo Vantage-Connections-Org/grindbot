@@ -168,7 +168,10 @@ struct SettingsView: View {
     private var messages: some View {
         Section("Messages") {
             Picker("Message file", selection: $settings.cfg.messagesFile) {
-                ForEach(SettingsView.discoverMessageFiles(), id: \.self) { path in
+                // A hand-edited messagesFile that isn't on disk still has to appear,
+                // or SwiftUI matches no tag and the picker renders blank — the file
+                // you typed looks like it was rejected. Windows does the same.
+                ForEach(SettingsView.pickerOptions(including: cfg.messagesFile), id: \.self) { path in
                     Text(path).tag(path)
                 }
             }
@@ -263,6 +266,14 @@ struct SettingsView: View {
         }
         var seen = Set<String>()
         return ["messages.txt"] + packs.sorted().filter { seen.insert($0).inserted }
+    }
+
+    /// The discovered files, plus whatever the config currently points at even if
+    /// that file is missing or lives somewhere we don't scan.
+    static func pickerOptions(including current: String) -> [String] {
+        let found = discoverMessageFiles()
+        guard !current.isEmpty, !found.contains(current) else { return found }
+        return [current] + found
     }
 }
 
