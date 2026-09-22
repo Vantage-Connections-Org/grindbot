@@ -55,7 +55,9 @@ jobs:
           cp -R GrindBot.app stage/
           cp -R packs stage/
           cp LICENSE CUSTOMIZING.md stage/
-          ditto -c -k --keepParent GrindBot.app GrindBot-mac.zip
+          # Zip the staged folder, not the bare app: Config.swift looks for a
+          # message file next to the bundle first, so packs/ has to travel with it.
+          ditto -c -k --keepParent stage GrindBot-mac.zip
       - name: Disk image
         run: |
           set -euo pipefail
