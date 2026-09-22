@@ -1,7 +1,9 @@
-# Line endings are not cosmetic here. Every shipped pack was CRLF, and the macOS
-# parser trimmed only spaces, so each message carried a trailing carriage return
-# and a blank line became an empty speech bubble. The parser handles both now,
-# but the files themselves should stop drifting.
+# Line endings are not cosmetic here. The packs are stored LF and CI checks them
+# out that way, but a Windows working copy gets CRLF via core.autocrlf, and any
+# pack a user writes in Notepad is CRLF too. The macOS parser used to trim only
+# spaces, so each message kept a trailing carriage return and a blank line became
+# an empty speech bubble. The parser handles both now; this keeps the repo's own
+# files from drifting into the same shape.
 
 * text=auto eol=lf
 
