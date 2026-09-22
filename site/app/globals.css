@@ -2,30 +2,42 @@
 
 /* One palette, both themes. The accent is the robot's own default accent colour,
    darkened for light mode so text on it clears AA. */
+/* Gallery wall: cream paper, charcoal frames, brass. The posters are the dark
+   objects on the page, so the page itself stays light in both schemes — dark
+   mode dims the room rather than inverting it. */
 :root {
-  --bg: #fafaf9;
+  --bg: #f3efe6;
+  --paper: #faf7f0;
   --surface: #ffffff;
-  --text: #161818;
-  --muted: #5a6260;
-  --accent: #0e8a66;
-  --accent-hover: #0b6e51;
-  --border: #e2e5e3;
-  --accent-soft: #dff3ec;
-  /* Text drawn on top of --accent. Not a brand token: derived for contrast. */
-  --accent-ink: #ffffff;
+  --ink: #171513;
+  --text: #171513;
+  --muted: #6b635a;
+  --brass: #a67c34;
+  --brass-bright: #c89b4a;
+  --accent: #8a5f21;
+  --accent-hover: #6d4a18;
+  --accent-ink: #faf7f0;
+  --border: #ddd4c4;
+  --accent-soft: #ece2cf;
+  --frame: #15130f;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #141414;
-    --surface: #1d1e1e;
-    --text: #eceeed;
-    --muted: #9ba3a0;
-    --accent: #33d6a8;
-    --accent-hover: #5fe3be;
-    --border: #2c2e2e;
-    --accent-soft: #12342a;
-    --accent-ink: #0a2a20;
+    --bg: #17150f;
+    --paper: #1e1b15;
+    --surface: #24211a;
+    --ink: #f2ece0;
+    --text: #f2ece0;
+    --muted: #a49984;
+    --brass: #c89b4a;
+    --brass-bright: #e0b968;
+    --accent: #d9a94f;
+    --accent-hover: #efc069;
+    --accent-ink: #17150f;
+    --border: #38332a;
+    --accent-soft: #2b2619;
+    --frame: #0c0b08;
   }
 }
 
@@ -39,8 +51,13 @@
   --color-border: var(--border);
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-brass: var(--brass);
+  --color-brass-bright: var(--brass-bright);
+  --color-frame: var(--frame);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono-face);
 }
 
 html {
@@ -69,29 +86,22 @@ body {
   }
 }
 
-/* Scroll reveal (components/Reveal.tsx) */
-.reveal-pending {
-  opacity: 0;
-  transform: translateY(18px);
-  transition:
-    opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.reveal-pending.reveal-in {
-  opacity: 1;
-  transform: none;
+/* Engraved plaque lettering: wide-tracked serif caps with a hairline rule,
+   the thing every one of these posters has under the photograph. */
+.plaque {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-weight: 500;
 }
 
-/* The robot bobs, the way it does on screen. One property, reduced-motion safe. */
-@keyframes bob {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px);
-  }
+.rule-brass {
+  background: linear-gradient(90deg, transparent, var(--brass) 18%, var(--brass-bright) 50%, var(--brass) 82%, transparent);
+  height: 1px;
 }
-.bob {
-  animation: bob 3.2s ease-in-out infinite;
+
+/* Paper tooth, so the cream reads as stock rather than flat #fff. */
+.paper-grain {
+  background-image: radial-gradient(rgba(23, 21, 19, 0.045) 1px, transparent 1px);
+  background-size: 3px 3px;
 }

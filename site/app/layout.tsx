@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { DESCRIPTION, FAQ, LICENSE_URL, NAME, REPO_URL, SITE_URL, TITLE } from "@/lib/site";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+// Display face carries the whole identity: the engraved caps under a poster.
+const display = Instrument_Serif({ variable: "--font-display", subsets: ["latin"], weight: "400" });
+const body = Inter({ variable: "--font-body", subsets: ["latin"] });
+const mono = JetBrains_Mono({ variable: "--font-mono-face", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -29,8 +31,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAFAF9" },
-    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+    { media: "(prefers-color-scheme: light)", color: "#f3efe6" },
+    { media: "(prefers-color-scheme: dark)", color: "#17150f" },
   ],
 };
 
@@ -64,7 +66,7 @@ const jsonLd = [
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang="en" className={`${display.variable} ${body.variable} ${mono.variable} antialiased`}>
       <body className="min-h-[100dvh] font-sans">
         {children}
         <Analytics />

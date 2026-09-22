@@ -19,12 +19,6 @@ export const TITLE = "GrindBot: a tiny robot yells at you. Free.";
 export const DESCRIPTION =
   "A robot pops up in a corner of your screen, types one line, and disappears. Click-through, so it never takes focus. No dock icon, no taskbar entry. Every message is a text file you can swap mid-session. macOS and Windows, MIT, open source.";
 
-/** The hero demo loop: a ~6s capture of the robot typing one line over a real editor.
- *  Null until the files are in public/. The hero renders the illustrated corner instead —
- *  there is no placeholder video and no poster frame standing in for footage that does
- *  not exist. Set this to the two paths and the <video> takes over. */
-export const HERO_VIDEO: { webm: string; mp4: string; alt: string } | null = null;
-
 /** Verbatim shell commands from the repo's two READMEs. */
 export const MAC_BUILD = `git clone https://github.com/${REPO}.git GrindBot
 cd GrindBot

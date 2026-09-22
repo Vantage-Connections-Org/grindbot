@@ -10,33 +10,37 @@ function GithubMark({ size = 18 }: { size?: number }) {
   );
 }
 
-/** Top navigation. Server component: the star count is fetched at render, cached an hour. */
+/** The gallery entrance: a plate on the wall, not a floating app bar. Server component —
+ *  the star count is fetched at render and cached for an hour. */
 export async function SiteHeader() {
   const stars = await githubStars();
   return (
-    <header className="sticky top-0 z-20 border-b border-border/70 bg-bg/85 backdrop-blur">
-      <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
+    <header className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
+      <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link href="/" className="flex min-w-0 items-center gap-2.5">
           <GrindBotMark size={26} className="shrink-0" />
-          {NAME}
+          <span className="font-display text-xl leading-none">{NAME}</span>
         </Link>
         <div className="flex items-center gap-1 text-sm">
-          <Link href="/#packs" className="hidden rounded-lg px-3 py-2 text-muted transition hover:text-text sm:block">
+          <Link href="/#gallery" className="hidden px-3 py-2 text-muted transition hover:text-text sm:block">
+            Gallery
+          </Link>
+          <Link href="/#packs" className="hidden px-3 py-2 text-muted transition hover:text-text sm:block">
             Packs
           </Link>
-          <Link href="/#config" className="hidden rounded-lg px-3 py-2 text-muted transition hover:text-text sm:block">
+          <Link href="/#config" className="hidden px-3 py-2 text-muted transition hover:text-text md:block">
             Config
           </Link>
-          <Link href="/#faq" className="hidden rounded-lg px-3 py-2 text-muted transition hover:text-text md:block">
-            FAQ
+          <Link href="/#build" className="hidden px-3 py-2 text-muted transition hover:text-text md:block">
+            Build
           </Link>
           <a
             href={REPO_URL}
-            className="ml-1 inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 font-medium transition hover:border-muted active:scale-[0.98]"
+            className="ml-1 inline-flex items-center gap-2 rounded-sm border border-brass/50 px-3 py-2 transition hover:border-brass hover:bg-accent-soft"
           >
             <GithubMark />
             <span className="hidden sm:inline">GitHub</span>
-            {stars !== null && <span className="text-muted tabular-nums">{stars}★</span>}
+            {stars !== null && <span className="text-accent tabular-nums">{stars}★</span>}
           </a>
         </div>
       </nav>
@@ -48,7 +52,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-border">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-10 text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p>
+        <p className="max-w-[58ch]">
           {NAME} is free and{" "}
           <a href={LICENSE_URL} className="underline underline-offset-4 hover:text-text">
             MIT licensed
