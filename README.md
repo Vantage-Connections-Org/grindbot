@@ -41,7 +41,7 @@ Everything is under the 🤖 icon:
 | Settings… (⌘,) | Open the settings window — every option below, with live preview |
 | Say something now | Fire a message immediately — useful for hitting a cue while recording |
 | Turn off / Turn on | Stop the popups without quitting. Icon becomes 💤. Turning it back on fires one right away |
-| Face | Switch robot face for this session |
+| Face | Switch robot face. Saved to `config.json`, like every other setting |
 | Reload config & messages | Re-read both files without rebuilding |
 | Edit messages… / Edit config.json… | Open the files in your default editor |
 | Quit | Shut it down |
@@ -127,7 +127,7 @@ a broken file degrades rather than crashes.
 | `typeSpeed` | `0.022` | Seconds per character for the typewriter effect. `0` shows the whole message at once |
 | `shuffle` | `false` | Random order instead of in-order |
 | `messagesFile` | `"messages.txt"` | Path to the message file, relative to the app |
-| `margin` | `22` | Gap from the screen edge, in points |
+| `margin` | `22` | Padding inside the popup, in points, scaled by `scale / 1.5` — so it is the gap you see at the default scale, and proportionally larger or smaller at others |
 | `maxBubbleWidth` | `280` | Bubble width before wrapping, before `scale` is applied |
 
 ### Timing

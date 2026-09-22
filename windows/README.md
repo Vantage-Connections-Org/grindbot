@@ -122,7 +122,7 @@ Two keys behave slightly differently here:
 | Key | Windows behaviour |
 |---|---|
 | `screenIndex` | `0` is your **primary** display, `1` the next, and so on. `-1` follows the focused window. Windows enumerates monitors in device order, so the list is reordered to put the primary first — matching what the settings picker shows |
-| `margin` | In device-independent pixels, not macOS points. Same numbers, same result at 100% scaling; scales automatically on high-DPI displays |
+| `margin` | In device-independent pixels, not macOS points. Same numbers, same result at 100% scaling; scales automatically on high-DPI displays. Like macOS it is padding inside the popup, multiplied by `scale / 1.5` |
 
 And three keys are Windows-only:
 
