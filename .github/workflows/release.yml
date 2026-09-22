@@ -1,0 +1,108 @@
+name: release
+
+# Push a tag like v1.0.0 to build both apps and publish a GitHub Release.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)build the release for, e.g. v1.0.0"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      # Self-contained: runs on any Windows 10/11 PC without installing .NET.
+      - name: Build GrindBot.exe
+        shell: pwsh
+        run: |
+          ./windows/build.ps1 -SelfContained
+          Copy-Item LICENSE windows/dist/
+          Compress-Archive -Path windows/dist/* -DestinationPath GrindBot-windows-x64.zip
+          (Get-Item GrindBot-windows-x64.zip).Length
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: GrindBot-windows-x64.zip
+          if-no-files-found: error
+
+  mac:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - name: Build GrindBot.app
+        run: |
+          set -euo pipefail
+          ./build.sh
+          # The message packs live beside the app, not inside it, so they ship too.
+          mkdir -p stage
+          cp -R GrindBot.app stage/
+          cp -R packs stage/
+          cp LICENSE CUSTOMIZING.md stage/
+          ditto -c -k --keepParent GrindBot.app GrindBot-mac.zip
+      - name: Disk image
+        run: |
+          set -euo pipefail
+          ln -s /Applications stage/Applications
+          hdiutil create -volname GrindBot -srcfolder stage -ov -format UDZO GrindBot-mac.dmg
+          hdiutil attach GrindBot-mac.dmg -mountpoint /tmp/gbverify -nobrowse -readonly
+          test -x /tmp/gbverify/GrindBot.app/Contents/MacOS/GrindBot
+          hdiutil detach /tmp/gbverify
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mac
+          path: |
+            GrindBot-mac.zip
+            GrindBot-mac.dmg
+          if-no-files-found: error
+
+  publish:
+    needs: [windows, mac]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+      - name: Create or update the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # "What's new": this tag's section of CHANGELOG.md (heading "## vX.Y.Z ...").
+          if [ -f CHANGELOG.md ]; then
+            awk -v t="$TAG" '$0 ~ "^## "t" " {on=1; next} /^## v/ {on=0} on' CHANGELOG.md > changes.md
+          fi
+          cat > notes.md <<'EOF'
+          ## Download
+
+          **Windows 10/11:** `GrindBot-windows-x64.zip`. Unzip anywhere and run `GrindBot.exe`; the robot appears in your system tray. No .NET install needed. The exe isn't code-signed, so SmartScreen may ask you to confirm: click *More info* then *Run anyway*. Your settings live in `%APPDATA%\GrindBot`, so rebuilding or deleting the folder never touches them.
+
+          **macOS 13+:** `GrindBot-mac.dmg` (drag GrindBot to Applications) or the plain `GrindBot-mac.zip`. Not notarized, so macOS blocks it on first launch: open System Settings > Privacy & Security, scroll to Security, and click *Open Anyway*.
+
+          Message packs are plain text — swap them, edit them, or point `messagesFile` at your own. See CUSTOMIZING.md.
+          EOF
+          if [ -s changes.md ]; then { echo "## What's new"; cat changes.md; echo; cat notes.md; } > n2.md && mv n2.md notes.md; fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" GrindBot-windows-x64.zip GrindBot-mac.zip GrindBot-mac.dmg --clobber
+          else
+            gh release create "$TAG" GrindBot-windows-x64.zip GrindBot-mac.zip GrindBot-mac.dmg --title "GrindBot $TAG" --notes-file notes.md
+          fi
