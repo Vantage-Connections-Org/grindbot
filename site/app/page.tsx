@@ -89,6 +89,8 @@ export default async function Home() {
             width={1600}
             height={905}
             priority
+            // Film-grain poster: the extra bytes of the default quality buy nothing visible.
+            quality={58}
             sizes="(min-width: 1024px) 64rem, 100vw"
             className="h-auto w-full"
           />
