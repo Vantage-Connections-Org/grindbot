@@ -10,6 +10,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  images: {
+    // Next 16 only honours quality values listed here; anything else is ignored
+    // silently, which already cost one wasted measurement.
+    qualities: [58, 75],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
