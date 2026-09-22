@@ -1,0 +1,16 @@
+<svg viewBox="0 16 64 44" xmlns="http://www.w3.org/2000/svg">
+  <!-- Head only: at 16px the antenna stalk turns to a smudge. No stroke, per the brand brief.
+       The tokens are declared in-file so the icon follows the browser's theme. -->
+  <style>
+    :root { --surface: #ffffff; --muted: #5a6260; --accent: #0e8a66; }
+    @media (prefers-color-scheme: dark) {
+      :root { --surface: #1d1e1e; --muted: #9ba3a0; --accent: #33d6a8; }
+    }
+  </style>
+  <rect x="3" y="31" width="5" height="14" rx="2.5" fill="var(--muted)"/>
+  <rect x="56" y="31" width="5" height="14" rx="2.5" fill="var(--muted)"/>
+  <rect x="5" y="16" width="54" height="44" rx="13" fill="var(--surface)"/>
+  <rect x="10" y="23" width="44" height="30" rx="9" fill="#212121"/>
+  <rect x="19.5" y="32" width="8" height="12" rx="4" fill="var(--accent)"/>
+  <rect x="36.5" y="32" width="8" height="12" rx="4" fill="var(--accent)"/>
+</svg>

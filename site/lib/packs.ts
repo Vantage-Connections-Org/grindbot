@@ -15,12 +15,13 @@ export type Pack = {
   lines: string[];
 };
 
-/** Tone lines come from the pack table in the repo README. */
+/** Tone lines come from the pack table in the repo README. Order is display order:
+ *  habits and hustle lead, the two guarded packs come last. */
 const PACK_META = [
-  { slug: "classic", tone: "The originals", guarded: true },
+  { slug: "habits", tone: "Hours, momentum, decay — aimed at the habit", guarded: false },
   { slug: "hustle", tone: "Aggressive entrepreneur", guarded: false },
   { slug: "discipline", tone: "No excuses, drill sergeant", guarded: false },
-  { slug: "habits", tone: "Hours, momentum, decay — aimed at the habit", guarded: false },
+  { slug: "classic", tone: "The originals", guarded: true },
   { slug: "obituary", tone: "Mortality and legacy. The bleak one", guarded: true },
 ] as const;
 

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LICENSE_URL, ISSUES_URL, NAME, REPO_URL, githubStars } from "@/lib/site";
 import { Robot } from "@/components/Robot";
 
@@ -15,22 +16,22 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-bg/85 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-        <a href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
           <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#212121]">
             <Robot size={17} />
           </span>
           {NAME}
-        </a>
+        </Link>
         <div className="flex items-center gap-1 text-sm">
-          <a href="/#packs" className="hidden rounded-lg px-3 py-2 text-muted transition hover:text-text sm:block">
+          <Link href="/#packs" className="hidden rounded-lg px-3 py-2 text-muted transition hover:text-text sm:block">
             Packs
-          </a>
-          <a href="/#config" className="hidden rounded-lg px-3 py-2 text-muted transition hover:text-text sm:block">
+          </Link>
+          <Link href="/#config" className="hidden rounded-lg px-3 py-2 text-muted transition hover:text-text sm:block">
             Config
-          </a>
-          <a href="/#faq" className="hidden rounded-lg px-3 py-2 text-muted transition hover:text-text md:block">
+          </Link>
+          <Link href="/#faq" className="hidden rounded-lg px-3 py-2 text-muted transition hover:text-text md:block">
             FAQ
-          </a>
+          </Link>
           <a
             href={REPO_URL}
             className="ml-1 inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 font-medium transition hover:border-muted active:scale-[0.98]"
