@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LICENSE_URL, ISSUES_URL, NAME, REPO_URL, githubStars } from "@/lib/site";
-import { Robot } from "@/components/Robot";
+import { GrindBotMark } from "@/components/Mark";
 
 function GithubMark({ size = 18 }: { size?: number }) {
   return (
@@ -16,10 +16,8 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-border/70 bg-bg/85 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-          <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[#212121]">
-            <Robot size={17} />
-          </span>
+        <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
+          <GrindBotMark size={26} className="shrink-0" />
           {NAME}
         </Link>
         <div className="flex items-center gap-1 text-sm">

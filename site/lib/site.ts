@@ -81,27 +81,27 @@ export async function githubStars(): Promise<number | null> {
 
 export const FAQ: { q: string; a: string }[] = [
   {
-    q: "Is GrindBot signed?",
-    a: "No. On macOS build.sh ad-hoc signs the app, but it is not signed by Apple, so if you move it somewhere macOS treats as quarantined you right-click and choose Open once to get past Gatekeeper. The Windows build is not code-signed either; you build it yourself from source with the .NET 8 SDK.",
+    q: "Is it code-signed?",
+    a: "No. build.sh ad-hoc signs the macOS app; Apple has not signed it. Move it somewhere macOS treats as quarantined and Gatekeeper blocks it until you right-click and choose Open once. The Windows build is not signed either, and PowerShell may refuse to run build.ps1 until you unblock it once with Unblock-File .\\build.ps1.",
   },
   {
-    q: "Does it steal focus or interrupt a recording?",
-    a: "No. The overlay window is click-through on both platforms (ignoresMouseEvents on macOS, WS_EX_TRANSPARENT plus WS_EX_NOACTIVATE on Windows), so clicks pass straight to whatever is underneath. macOS runs it as an accessory app with LSUIElement set, so there is no dock icon and no app switcher entry; on Windows the overlay sets ShowInTaskbar to false. It lives in the menu bar or the system tray instead.",
+    q: "Does it steal focus?",
+    a: "No. The window sets ignoresMouseEvents on macOS and WS_EX_TRANSPARENT with WS_EX_NOACTIVATE on Windows, so clicks land on whatever is underneath it. macOS runs it with LSUIElement, so there is no dock icon and no app-switcher entry. On Windows the overlay sets ShowInTaskbar to false. It runs from the menu bar or the system tray.",
   },
   {
-    q: "Does it work with more than one monitor?",
-    a: "Yes. The screenIndex key picks the display: 0 is your primary, 1 the next, and -1 follows keyboard focus. On Windows the monitor list is reordered so the primary comes first, matching what the settings picker shows.",
+    q: "Which monitor does it use?",
+    a: "The one screenIndex points at. 0 is your primary, 1 the next, -1 follows keyboard focus. On Windows the monitor list is reordered to put the primary first, so the numbers match the settings picker.",
   },
   {
     q: "How do I add my own messages?",
-    a: "Messages are one per line in a plain text file. Blank lines and lines starting with # are ignored. Edit messages.txt, or drop your own file in packs/ and point messagesFile at it, then hit Reload config & messages in the menu. No rebuild. On macOS the files sit next to the app; on Windows they live in %APPDATA%\\GrindBot.",
+    a: "One message per line in a text file. Blank lines and lines starting with # are ignored. Edit messages.txt, or drop a file in packs/ and point messagesFile at it, then hit Reload config & messages. No rebuild. The files sit next to the app on macOS and in %APPDATA%\\GrindBot on Windows.",
   },
   {
     q: "Does it phone home?",
-    a: "No. There is no backend, no account and no network code at all: neither the Swift sources nor the Windows sources make a single HTTP request. It reads your config and message files and draws a robot.",
+    a: "No. There is no backend and no account. Neither source tree contains a single HTTP call: it reads your config and message files, and draws a robot.",
   },
   {
-    q: "Where do I download it?",
-    a: "There is no packaged release yet, so you build it from source. On macOS that is ./build.sh; on Windows it is .\\build.ps1 -Run. Both take one command and are on this page.",
+    q: "Where is the download?",
+    a: "There is no release yet. You build it from source, which is one command on either platform, both of them on this page.",
   },
 ];

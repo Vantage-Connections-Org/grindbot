@@ -10,3 +10,4 @@ windows/bin/
 windows/obj/
 windows/dist/
 windows/grindbot.log
+.vercel

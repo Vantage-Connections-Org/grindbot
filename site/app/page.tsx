@@ -1,7 +1,8 @@
+import Image from "next/image";
+import { HeroMedia } from "@/components/HeroMedia";
 import { Reveal } from "@/components/Reveal";
-import { Robot } from "@/components/Robot";
 import { GithubMark, SiteFooter, SiteHeader } from "@/components/SiteChrome";
-import { getPacks, totalMessages, type Pack } from "@/lib/packs";
+import { getPacks, quote, totalMessages, type Pack } from "@/lib/packs";
 import {
   CONFIG_KEYS,
   CUSTOMIZING_URL,
@@ -10,7 +11,6 @@ import {
   MAC_BUILD,
   MAC_BUILD_URL,
   MAC_REQUIREMENTS,
-  NAME,
   PACKS_URL,
   REPO_URL,
   TAGLINE,
@@ -20,22 +20,18 @@ import {
   githubStars,
 } from "@/lib/site";
 
-// One line the robot is actually shipped with, from packs/hustle.txt. The hero never
-// quotes classic or obituary.
-const HERO_LINE = "Talk is cheap. Ship something.";
-
 const WHAT_IT_DOES = [
   {
-    title: "Clicks go straight through it",
-    body: "The overlay window sets ignoresMouseEvents on macOS and WS_EX_TRANSPARENT on Windows, so you can click, drag and type as if it were not there. It never takes focus mid-take.",
+    title: "Clicks go through it",
+    body: "The window sets ignoresMouseEvents on macOS and WS_EX_TRANSPARENT on Windows. It never receives a click, so it cannot swallow one meant for your editor.",
   },
   {
     title: "No dock icon, no taskbar entry",
-    body: "macOS runs it as an accessory app (LSUIElement), Windows keeps it out of the taskbar. It lives in the menu bar or the system tray, so an uncluttered recording stays uncluttered.",
+    body: "LSUIElement on macOS, ShowInTaskbar false on Windows. It runs from the menu bar or the system tray, and nothing new shows up in ⌘-Tab or Alt-Tab.",
   },
   {
     title: "Every message is a text file",
-    body: "One line per message, # for comments. Edit the file, hit Reload config & messages, and the next popup is your line. No rebuild, no format, no database.",
+    body: "One line per message, # for comments. Edit the file, hit Reload config & messages, and the next popup is your line. No rebuild.",
   },
 ];
 
@@ -43,6 +39,11 @@ export default async function Home() {
   const packs = getPacks();
   const stars = await githubStars();
   const total = totalMessages(packs);
+
+  // Both quotes are pulled from packs/habits.txt at build time and the build fails if the
+  // lines change. Never classic, never obituary.
+  const heroLine = quote(packs, "habits", "Momentum is a currency");
+  const pullQuote = quote(packs, "habits", "Skill decays");
 
   return (
     <>
@@ -54,8 +55,8 @@ export default async function Home() {
           <div>
             <h1 className="text-4xl font-semibold leading-[1.05] tracking-tighter sm:text-5xl lg:text-6xl">{TAGLINE}</h1>
             <p className="mt-5 max-w-[48ch] text-lg leading-relaxed text-muted">
-              {NAME} is a tiny robot that pops up in the corner of your screen, types one line at you, and disappears —
-              built for the people who spend all day recording that screen.
+              A robot appears in the corner of your screen, types one line, and disappears. Every 20 seconds out of the
+              box; the slider runs from 5 seconds to 5 hours. Clicks pass straight through it.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
@@ -80,26 +81,11 @@ export default async function Home() {
               {stars !== null && <span className="tabular-nums">· {stars}★</span>}
             </a>
             <p className="mt-6 text-sm text-muted">
-              MIT licensed. macOS 13+ and Windows 10/11. No packaged release yet — you build it from source, which is
-              one command on either platform.
+              No release to download yet, so you build it. MIT. macOS 13 or newer, Windows 10 or 11.
             </p>
           </div>
 
-          {/* A screen corner, the way the robot actually sits on one. */}
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-[#1b1c1c] p-4 shadow-[0_24px_60px_-28px_rgb(22_24_24/0.5)] sm:p-6">
-            <div className="flex gap-1.5">
-              <span className="size-2.5 rounded-full bg-white/15" />
-              <span className="size-2.5 rounded-full bg-white/15" />
-              <span className="size-2.5 rounded-full bg-white/15" />
-            </div>
-            <div className="mt-4 h-24 rounded-lg bg-white/[0.04] sm:h-32" />
-            <div className="mt-3 flex items-end justify-end gap-2 sm:gap-3">
-              <p className="max-w-[16ch] rounded-2xl rounded-br-sm bg-white/10 px-3 py-2 text-sm leading-snug text-white sm:max-w-[20ch] sm:text-base">
-                {HERO_LINE}
-              </p>
-              <Robot size={72} bob label={`The ${NAME} robot, saying: ${HERO_LINE}`} />
-            </div>
-          </div>
+          <HeroMedia line={heroLine} />
         </section>
 
         {/* What it does */}
@@ -107,7 +93,7 @@ export default async function Home() {
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
             <Reveal>
               <h2 className="max-w-[22ch] text-3xl font-semibold tracking-tight md:text-4xl">
-                It sits on top of your screen and stays out of the way.
+                It draws over your screen and touches nothing else.
               </h2>
             </Reveal>
             <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -123,24 +109,37 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* One line, on its own. */}
+        <section className="mx-auto max-w-5xl px-4 py-20 sm:px-6">
+          <Reveal>
+            <figure>
+              <blockquote className="max-w-[20ch] text-3xl font-medium leading-tight tracking-tight sm:text-4xl md:text-5xl">
+                {pullQuote}
+              </blockquote>
+              <figcaption className="mt-6 font-mono text-sm text-muted">packs/habits.txt</figcaption>
+            </figure>
+          </Reveal>
+        </section>
+
         {/* Packs */}
-        <section id="packs" className="mx-auto max-w-5xl scroll-mt-20 px-4 py-20 sm:px-6">
+        <section id="packs" className="mx-auto max-w-5xl scroll-mt-20 border-t border-border px-4 py-20 sm:px-6">
           <Reveal>
             <h2 className="max-w-[24ch] text-3xl font-semibold tracking-tight md:text-4xl">
-              Five packs ship with it. {total} lines in total.
+              Five packs, {total} lines.
             </h2>
             <p className="mt-3 max-w-[62ch] text-muted">
-              Each pack is a text file in{" "}
+              Each one is a text file in{" "}
               <a href={PACKS_URL} className="underline underline-offset-4 hover:text-text">
                 packs/
               </a>
               . Point <code className="font-mono text-sm">messagesFile</code> at one, or write your own and keep as many
-              as you like. Two of them are folded away below — they read badly without the joke around them.
+              as you like. The last two are folded shut. Classic is the original joke and its best line does not survive
+              a list; obituary is about dying.
             </p>
           </Reveal>
           <div className="mt-10 grid gap-4 md:grid-cols-2">
             {packs.map((pack, i) => (
-              <Reveal key={pack.slug} delay={i * 0.05} className={pack.guarded ? "md:col-span-1" : undefined}>
+              <Reveal key={pack.slug} delay={i * 0.05}>
                 <PackCard pack={pack} />
               </Reveal>
             ))}
@@ -151,25 +150,34 @@ export default async function Home() {
         <section className="border-y border-border bg-surface">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
             <Reveal>
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Five faces, and the colours are yours.</h2>
-              <p className="mt-3 max-w-[60ch] text-muted">
-                Pick one in the settings window, from the Face menu, or with the <code className="font-mono text-sm">face</code>{" "}
-                key. Colours are separate: <code className="font-mono text-sm">accent</code> drives the eyes, antenna and
-                chest light, <code className="font-mono text-sm">shell</code> the body,{" "}
-                <code className="font-mono text-sm">visor</code> the panel behind the eyes.
+              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Five faces. Three colours.</h2>
+              <p className="mt-3 max-w-[62ch] text-muted">
+                Set <code className="font-mono text-sm">face</code> to one of{" "}
+                {FACES.map((f) => f.name).join(", ")}. Colour is separate:{" "}
+                <code className="font-mono text-sm">accent</code> drives the eyes, antenna and chest light,{" "}
+                <code className="font-mono text-sm">shell</code> the body,{" "}
+                <code className="font-mono text-sm">visor</code> the panel behind the eyes. A dark shell with a bright
+                accent is a different robot.
               </p>
             </Reveal>
-            <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
-              {FACES.map((face, i) => (
-                <Reveal key={face.name} delay={i * 0.05}>
-                  <li className="flex h-full flex-col items-center rounded-2xl border border-border bg-[#1b1c1c] p-4 text-center">
-                    <Robot size={62} face={face.name} />
-                    <h3 className="mt-3 font-mono text-sm text-white">{face.name}</h3>
-                    <p className="mt-1 text-xs leading-snug text-white/60">{face.note}</p>
+            <Reveal delay={0.06}>
+              <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-[#1b1c1c]">
+                <Image
+                  src="/faces.png"
+                  alt="The five robot faces side by side: visor, cyclops, pixel, angry and dot"
+                  width={1600}
+                  height={421}
+                  className="h-auto w-full"
+                />
+              </div>
+              <ul className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm text-muted sm:grid-cols-5">
+                {FACES.map((face) => (
+                  <li key={face.name}>
+                    <span className="font-mono text-accent">{face.name}</span> — {face.note}
                   </li>
-                </Reveal>
-              ))}
-            </ul>
+                ))}
+              </ul>
+            </Reveal>
           </div>
         </section>
 
@@ -181,49 +189,66 @@ export default async function Home() {
             </h2>
             <p className="mt-3 max-w-[62ch] text-muted">
               Every key is optional. Anything missing or malformed falls back to its default, so a broken file degrades
-              rather than crashes. The settings window writes the same file, and changes apply live. Defaults below are
-              the ones in <code className="font-mono text-sm">config.default.json</code>.
+              rather than crashes. The settings window writes the same file and applies changes as you drag. Defaults
+              below are the ones in <code className="font-mono text-sm">config.default.json</code>.
             </p>
           </Reveal>
-          <Reveal delay={0.06}>
-            {/* Scrolls horizontally rather than forcing the page to, on a narrow phone. */}
-            <div className="mt-8 overflow-x-auto rounded-2xl border border-border bg-surface">
-              <table className="w-full min-w-[34rem] text-left text-sm">
-                <thead className="border-b border-border text-muted">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 font-medium">
-                      Key
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
-                      Default
-                    </th>
-                    <th scope="col" className="px-4 py-3 font-medium">
-                      What it does
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {CONFIG_KEYS.map((row) => (
-                    <tr key={row.key} className="border-b border-border last:border-0 align-top">
-                      <td className="px-4 py-3 font-mono text-[13px] whitespace-nowrap text-accent">{row.key}</td>
-                      <td className="px-4 py-3 font-mono text-[13px] whitespace-nowrap text-muted">{row.value}</td>
-                      <td className="px-4 py-3 text-muted">{row.note}</td>
+          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <Reveal delay={0.06}>
+              {/* Scrolls sideways on its own rather than pushing the page wider. */}
+              <div className="overflow-x-auto rounded-2xl border border-border bg-surface">
+                <table className="w-full min-w-[32rem] text-left text-sm">
+                  <thead className="border-b border-border text-muted">
+                    <tr>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Key
+                      </th>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        Default
+                      </th>
+                      <th scope="col" className="px-4 py-3 font-medium">
+                        What it does
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p className="mt-4 text-sm text-muted">
+                  </thead>
+                  <tbody>
+                    {CONFIG_KEYS.map((row) => (
+                      <tr key={row.key} className="border-b border-border align-top last:border-0">
+                        <td className="px-4 py-3 font-mono text-[13px] whitespace-nowrap text-accent">{row.key}</td>
+                        <td className="px-4 py-3 font-mono text-[13px] whitespace-nowrap text-muted">{row.value}</td>
+                        <td className="px-4 py-3 text-muted">{row.note}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <figure className="rounded-2xl border border-border bg-surface p-4">
+                <Image
+                  src="/settings.png"
+                  alt="The GrindBot settings window on macOS: timing, size and position, colours, face and message file, with a live robot preview at the top"
+                  width={594}
+                  height={1100}
+                  className="h-auto w-full rounded-lg"
+                />
+                <figcaption className="mt-3 text-sm text-muted">
+                  The same keys, as a window. There is no OK and no Cancel — what you see is running, and it saves
+                  itself.
+                </figcaption>
+              </figure>
+            </Reveal>
+          </div>
+          <Reveal delay={0.14}>
+            <p className="mt-6 max-w-[62ch] text-sm text-muted">
               There are more: dwell timing, <code className="font-mono">margin</code>,{" "}
-              <code className="font-mono">maxBubbleWidth</code>, and a few Windows-only keys like{" "}
-              <code className="font-mono">theme</code> and <code className="font-mono">idleOnly</code>. The full table is
-              in the{" "}
+              <code className="font-mono">maxBubbleWidth</code>, and Windows-only keys like{" "}
+              <code className="font-mono">theme</code>, <code className="font-mono">idleOnly</code> and{" "}
+              <code className="font-mono">allMessageFiles</code>. The full table is in the{" "}
               <a href={`${REPO_URL}#configuration`} className="underline underline-offset-4 hover:text-text">
                 README
               </a>
-              ; adding a face or changing the drawing is in{" "}
+              . Adding a face or changing the drawing is in{" "}
               <a href={CUSTOMIZING_URL} className="underline underline-offset-4 hover:text-text">
                 CUSTOMIZING.md
               </a>
@@ -232,13 +257,13 @@ export default async function Home() {
           </Reveal>
         </section>
 
-        {/* Install */}
+        {/* Build */}
         <section className="border-y border-border bg-surface">
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6">
             <Reveal>
               <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">Build it.</h2>
               <p className="mt-3 max-w-[60ch] text-muted">
-                There is no release to download yet. Both platforms build from the same repo in one command.
+                There is nothing to download. Both platforms build from the same repo, in one command.
               </p>
             </Reveal>
             <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -249,7 +274,7 @@ export default async function Home() {
                   requirements={MAC_REQUIREMENTS}
                   code={MAC_BUILD}
                   href={MAC_BUILD_URL}
-                  note="build.sh compiles Sources/*.swift into GrindBot.app and ad-hoc signs it. It appears in the menu bar under the robot icon."
+                  note="build.sh compiles Sources/*.swift into GrindBot.app and ad-hoc signs it. Apple has not signed it: move the app somewhere quarantined and Gatekeeper blocks it until you right-click and choose Open once."
                 />
               </Reveal>
               <Reveal delay={0.06}>
@@ -259,7 +284,7 @@ export default async function Home() {
                   requirements={WINDOWS_REQUIREMENTS}
                   code={WINDOWS_BUILD}
                   href={WINDOWS_BUILD_URL}
-                  note="A full rewrite in WPF: same robot, same faces, same config.json, driven from the system tray. Settings live in %APPDATA%\GrindBot."
+                  note="A rewrite in WPF: same robot, same faces, same config.json, run from the system tray. Settings live in %APPDATA%\GrindBot. PowerShell may refuse the script until you unblock it once with Unblock-File .\build.ps1."
                 />
               </Reveal>
             </div>
@@ -310,14 +335,9 @@ function PackCard({ pack }: { pack: Pack }) {
             <span aria-hidden className="text-muted transition group-open:rotate-45">
               +
             </span>
-            Show the lines
+            Show all {pack.lines.length} lines
           </summary>
-          <p className="mt-3 text-xs text-muted">
-            {pack.slug === "obituary"
-              ? "Deliberately bleak. It is a joke about mortality, and it does not read like one out of context."
-              : "The five originals the app shipped with. They are funnier in the corner of a screen than in a list."}
-          </p>
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-4 space-y-2">
             {pack.lines.map((line) => (
               <li key={line} className="text-sm leading-snug text-muted">
                 {line}

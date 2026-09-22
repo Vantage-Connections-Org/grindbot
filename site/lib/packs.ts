@@ -43,3 +43,15 @@ export function getPacks(): Pack[] {
 export function totalMessages(packs: Pack[]): number {
   return packs.reduce((sum, p) => sum + p.lines.length, 0);
 }
+
+/** Pull one line out of a pack to quote on the page, matched on its opening words.
+ *  Throws at build time if the line has been edited or removed, so the site can never
+ *  show a message the app would not. Guarded packs are refused outright. */
+export function quote(packs: Pack[], slug: string, startsWith: string): string {
+  const pack = packs.find((p) => p.slug === slug);
+  if (!pack) throw new Error(`quote(): no pack named ${slug}`);
+  if (pack.guarded) throw new Error(`quote(): ${slug} is guarded and must not be quoted`);
+  const line = pack.lines.find((l) => l.startsWith(startsWith));
+  if (!line) throw new Error(`quote(): packs/${pack.file} no longer contains a line starting "${startsWith}"`);
+  return line;
+}
