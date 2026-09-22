@@ -51,7 +51,7 @@ export default async function Home() {
 
       <main>
         {/* Hero. No fade-in: this is the LCP element and must paint on the first render. */}
-        <section className="mx-auto grid max-w-5xl items-center gap-12 px-4 pb-16 pt-12 sm:px-6 md:pt-20 lg:grid-cols-[1.05fr_1fr]">
+        <section className="mx-auto grid max-w-5xl grid-cols-1 items-center gap-12 px-4 pb-16 pt-12 sm:px-6 md:pt-20 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
           <div>
             <h1 className="text-4xl font-semibold leading-[1.05] tracking-tighter sm:text-5xl lg:text-6xl">{TAGLINE}</h1>
             <p className="mt-5 max-w-[48ch] text-lg leading-relaxed text-muted">
@@ -96,7 +96,7 @@ export default async function Home() {
                 It draws over your screen and touches nothing else.
               </h2>
             </Reveal>
-            <div className="mt-10 grid gap-6 md:grid-cols-3">
+            <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
               {WHAT_IT_DOES.map((item, i) => (
                 <Reveal key={item.title} delay={i * 0.06}>
                   <div className="h-full rounded-2xl border border-border bg-bg p-6">
@@ -137,7 +137,7 @@ export default async function Home() {
               a list; obituary is about dying.
             </p>
           </Reveal>
-          <div className="mt-10 grid gap-4 md:grid-cols-2">
+          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
             {packs.map((pack, i) => (
               <Reveal key={pack.slug} delay={i * 0.05}>
                 <PackCard pack={pack} />
@@ -193,8 +193,8 @@ export default async function Home() {
               below are the ones in <code className="font-mono text-sm">config.default.json</code>.
             </p>
           </Reveal>
-          <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            <Reveal delay={0.06}>
+          <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <Reveal delay={0.06} className="min-w-0">
               {/* Scrolls sideways on its own rather than pushing the page wider. */}
               <div className="overflow-x-auto rounded-2xl border border-border bg-surface">
                 <table className="w-full min-w-[32rem] text-left text-sm">
@@ -266,7 +266,7 @@ export default async function Home() {
                 There is nothing to download. Both platforms build from the same repo, in one command.
               </p>
             </Reveal>
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2">
               <Reveal>
                 <BuildCard
                   id="mac"
@@ -377,10 +377,10 @@ function BuildCard({
   note: string;
 }) {
   return (
-    <div id={id} className="flex h-full scroll-mt-20 flex-col rounded-2xl border border-border bg-bg p-5">
+    <div id={id} className="flex h-full min-w-0 scroll-mt-20 flex-col rounded-2xl border border-border bg-bg p-5">
       <h3 className="text-lg font-semibold">{title}</h3>
       <p className="mt-2 text-sm text-muted">{requirements}</p>
-      <pre className="mt-4 overflow-x-auto rounded-xl bg-[#1b1c1c] p-4 font-mono text-[13px] leading-relaxed text-white/90">
+      <pre className="mt-4 min-w-0 overflow-x-auto rounded-xl bg-[#1b1c1c] p-4 font-mono text-[13px] leading-relaxed text-white/90">
         <code>{code}</code>
       </pre>
       <p className="mt-3 text-sm text-muted">{note}</p>
