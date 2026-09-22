@@ -61,6 +61,9 @@ struct Config {
     var messageFileList: [String]? = nil
     /// Draw from every message file we can find rather than a fixed selection.
     var allMessageFiles = false
+    /// Hold messages until you have stopped typing for idleSeconds.
+    var idleOnly = false
+    var idleSeconds: Double = 120
     var margin: Double = 22                 // gap from the screen edge, in points
     var maxBubbleWidth: Double = 280        // before scale is applied
 
@@ -121,6 +124,8 @@ extension Config {
         if let s = obj["shell"] as? String { c.shell = s }
         if let s = obj["visor"] as? String { c.visor = s }
         c.allMessageFiles = (obj["allMessageFiles"] as? Bool) ?? c.allMessageFiles
+        c.idleOnly        = (obj["idleOnly"] as? Bool) ?? c.idleOnly
+        c.idleSeconds     = number("idleSeconds").map { max(5, $0) } ?? c.idleSeconds
         if let s = obj["messagesFile"] as? String, !s.isEmpty {
             c.messagesFile = s
         } else if let list = obj["messagesFile"] as? [String] {
@@ -149,6 +154,7 @@ extension Config {
             "typeSpeed": typeSpeed, "shuffle": shuffle,
             "margin": margin, "maxBubbleWidth": maxBubbleWidth,
             "allMessageFiles": allMessageFiles,
+            "idleOnly": idleOnly, "idleSeconds": idleSeconds,
             // An array selection has to survive the save, or the 400ms autosave
             // would quietly collapse a multi-file config back to one file.
             "messagesFile": messageFileList ?? messagesFile,

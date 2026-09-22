@@ -11,6 +11,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var window: NSWindow!
     private var statusItem: NSStatusItem!
     private var loginItem: NSMenuItem?
+    private var idleItem: NSMenuItem?
+    private var idlePoll: Timer?
+    private var pending = false   // a scheduled message is waiting for you to go quiet
     private var pauseItem: NSMenuItem!
     private var faceItems: [NSMenuItem] = []
     private var timer: Timer?
@@ -51,6 +54,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         applied = settings.cfg
         observeSettings()
         startTimer()
+        syncIdlePoll(settings.cfg)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
             guard let self, !self.paused else { return }
             self.next()
@@ -90,6 +94,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if old?.intervalSeconds != cfg.intervalSeconds, !paused {
             startTimer(cfg)
         }
+        if old?.idleOnly != cfg.idleOnly || old?.idleSeconds != cfg.idleSeconds {
+            syncIdlePoll(cfg)
+        }
+        idleItem?.state = cfg.idleOnly ? .on : .off
         for item in faceItems {
             item.state = (item.representedObject as? String) == cfg.face.rawValue ? .on : .off
         }
@@ -130,6 +138,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(faceRoot)
 
         menu.addItem(.separator())
+        let idle = NSMenuItem(title: "Only when I'm idle", action: #selector(toggleIdleOnly), keyEquivalent: "")
+        idle.target = self
+        idle.state = settings.cfg.idleOnly ? .on : .off
+        idleItem = idle
+        menu.addItem(idle)
+
         let login = NSMenuItem(title: "Start at login", action: #selector(toggleLoginItem), keyEquivalent: "")
         login.target = self
         login.state = LoginItem.enabled ? .on : .off
@@ -177,10 +191,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let cfg = cfg ?? settings.cfg
         timer?.invalidate()
         let t = Timer(timeInterval: cfg.intervalSeconds, repeats: true) { [weak self] _ in
-            self?.next()
+            self?.scheduled()
         }
         RunLoop.main.add(t, forMode: .common)
         timer = t
+    }
+
+    /// The timer goes through here so the robot interrupts a lull rather than a
+    /// sentence. Anything asked for by hand — the menu, Settings, unpausing —
+    /// calls next() directly and skips the gate.
+    private func scheduled() {
+        if gated() {
+            pending = true
+            return
+        }
+        next()
+    }
+
+    private func gated() -> Bool {
+        let cfg = settings.cfg
+        return cfg.idleOnly && IdleInput.seconds() < cfg.idleSeconds
+    }
+
+    /// Only runs while the gate is on. The moment you go quiet the held message
+    /// lands, and the interval re-spaces from there rather than firing again a
+    /// second later.
+    private func syncIdlePoll(_ cfg: Config) {
+        idlePoll?.invalidate()
+        idlePoll = nil
+        guard cfg.idleOnly else { pending = false; return }
+
+        let t = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+            guard let self, self.pending, !self.paused, !self.gated() else { return }
+            self.pending = false
+            self.next()
+            self.startTimer()
+        }
+        RunLoop.main.add(t, forMode: .common)
+        idlePoll = t
     }
 
     private func next() {
@@ -253,6 +301,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         settingsWindow?.makeKeyAndOrderFront(nil)
     }
 
+    @objc private func toggleIdleOnly() {
+        settings.cfg.idleOnly.toggle()
+    }
+
     @objc private func toggleLoginItem() {
         let error = LoginItem.set(!LoginItem.enabled)
         loginItem?.state = LoginItem.enabled ? .on : .off
@@ -264,6 +316,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func quitApp() { NSApp.terminate(nil) }
+}
+
+/// Seconds since the last keyboard or mouse input anywhere in the session.
+enum IdleInput {
+    static func seconds() -> Double {
+        // kCGAnyInputEventType is UInt32.max; there is no Swift enum case for it.
+        let anyInput = CGEventType(rawValue: UInt32.max) ?? .null
+        return CGEventSource.secondsSinceLastEventType(.combinedSessionState, eventType: anyInput)
+    }
 }
 
 /// Run at login. The Windows build has had this from the start via an HKCU Run
