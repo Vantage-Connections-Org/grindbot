@@ -43,6 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.level = .statusBar
         window.ignoresMouseEvents = true          // never steals clicks or focus
         window.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary]
+        applyTheme(settings.cfg)
         reposition()
         window.orderFrontRegardless()
 
@@ -94,6 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if old?.intervalSeconds != cfg.intervalSeconds, !paused {
             startTimer(cfg)
         }
+        if old?.theme != cfg.theme { applyTheme(cfg) }
         if old?.idleOnly != cfg.idleOnly || old?.idleSeconds != cfg.idleSeconds {
             syncIdlePoll(cfg)
         }
@@ -165,6 +167,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         quit.target = self
         menu.addItem(quit)
         statusItem.menu = menu
+    }
+
+    /// The bubble is .regularMaterial, which follows whatever appearance the
+    /// window has, so pinning the window's appearance is the whole feature.
+    /// nil means "inherit the system", which is what "auto" should do.
+    private func applyTheme(_ cfg: Config) {
+        switch cfg.theme.lowercased() {
+        case "dark":  window.appearance = NSAppearance(named: .darkAqua)
+        case "light": window.appearance = NSAppearance(named: .aqua)
+        default:      window.appearance = nil
+        }
     }
 
     // MARK: - Placement

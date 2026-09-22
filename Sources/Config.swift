@@ -61,6 +61,8 @@ struct Config {
     var messageFileList: [String]? = nil
     /// Draw from every message file we can find rather than a fixed selection.
     var allMessageFiles = false
+    /// "auto" follows the system, or force "dark" / "light".
+    var theme: String = "auto"
     /// Hold messages until you have stopped typing for idleSeconds.
     var idleOnly = false
     var idleSeconds: Double = 120
@@ -120,6 +122,7 @@ extension Config {
         c.shuffle             = (obj["shuffle"] as? Bool) ?? c.shuffle
 
         if let s = obj["dwellMode"] as? String { c.dwellMode = s }
+        if let s = obj["theme"] as? String { c.theme = s }
         if let s = obj["accent"] as? String { c.accent = s }
         if let s = obj["shell"] as? String { c.shell = s }
         if let s = obj["visor"] as? String { c.visor = s }
@@ -154,7 +157,7 @@ extension Config {
             "typeSpeed": typeSpeed, "shuffle": shuffle,
             "margin": margin, "maxBubbleWidth": maxBubbleWidth,
             "allMessageFiles": allMessageFiles,
-            "idleOnly": idleOnly, "idleSeconds": idleSeconds,
+            "idleOnly": idleOnly, "idleSeconds": idleSeconds, "theme": theme,
             // An array selection has to survive the save, or the 400ms autosave
             // would quietly collapse a multi-file config back to one file.
             "messagesFile": messageFileList ?? messagesFile,
