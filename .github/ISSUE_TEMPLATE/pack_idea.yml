@@ -1,0 +1,41 @@
+name: Message pack idea
+description: A new pack, or lines for an existing one
+labels: [pack]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A pack is a text file, so a pull request is usually easier than an issue —
+        see [CONTRIBUTING.md](../blob/main/CONTRIBUTING.md). Open this if you'd
+        rather talk about it first.
+
+        The constraint that decides most lines: the bubble is on screen for
+        `3.2 + 0.055 × characters` seconds, capped at 9. A line that needs a
+        run-up is gone before it pays off.
+
+  - type: input
+    id: name
+    attributes:
+      label: What is the pack for, in one sentence
+      description: If that sentence is hard to write, it is probably two packs.
+    validations:
+      required: true
+
+  - type: textarea
+    id: lines
+    attributes:
+      label: A few example lines
+      description: One per line, as they'd appear in the file.
+      render: text
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: rules
+    attributes:
+      label: Check
+      options:
+        - label: Each line stands alone and reads cold, mid-task
+          required: true
+        - label: No slurs, nothing sexual, and nothing that reads as a real instruction to hurt yourself
+          required: true

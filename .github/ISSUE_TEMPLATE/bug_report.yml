@@ -1,0 +1,55 @@
+name: Bug report
+description: Something the app did that it shouldn't, or didn't do that it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The macOS build is verified by CI but has had very little real-world use,
+        so "I opened it and nothing happened at all" is a useful report here, not
+        a non-report.
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Which build
+      options:
+        - macOS
+        - Windows
+        - Both
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: OS version and how you got the app
+      description: e.g. "macOS 14.4, built from source with ./build.sh" or "Windows 11, the release zip"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Your config.json
+      description: >
+        Paste it if you changed anything. macOS keeps it in
+        ~/Library/Application Support/GrindBot, Windows in %APPDATA%\GrindBot,
+        and a file next to the app wins over either.
+      render: json
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log (Windows only, optional)
+      description: >
+        Set GRINDBOT_DEBUG=1 and restart; a grindbot.log appears next to
+        GrindBot.exe. There is no equivalent on macOS yet.
+      render: text
