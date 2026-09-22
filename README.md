@@ -1,7 +1,14 @@
 # GrindBot
 
+**A tiny robot yells at you. Free.**
+
 A tiny robot pops up in the corner of your screen, says something, and
 disappears. Built for screen recordings and social posts.
+
+<img src="docs/faces.png" alt="The five GrindBot robot faces: visor, cyclops, pixel, angry, dot" width="520">
+
+[grindbot.melbora.com](https://grindbot.melbora.com) · MIT · no telemetry, no
+network calls, no account.
 
 macOS and Windows. The rest of this README is the macOS build; for Windows see
 **[windows/README.md](windows/README.md)** — same robot, same `config.json`,
